@@ -1,0 +1,11 @@
+<!DOCTYPE suite SYSTEM "http://beust.com/testng/testng-1.0.dtd" >
+<suite name="RestAPI-Get-All-Companies">
+
+	<parameter name="hostname" value="localhost"/>
+	
+  	<test name="GetAllCompanies">   	
+    	<classes>  
+       		 <class name="com.tech.plugandplay.api.GetAllCompanies"/>
+    	</classes>
+  	</test>
+</suite>

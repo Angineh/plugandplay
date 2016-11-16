@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testng-results skipped="0" failed="0" total="1" passed="1">
+  <reporter-output>
+  </reporter-output>
+  <suite name="RestAPI-Get-Company" duration-ms="4390" started-at="2016-11-16T04:25:17Z" finished-at="2016-11-16T04:25:22Z">
+    <groups>
+    </groups>
+    <test name="GetCluster" duration-ms="4390" started-at="2016-11-16T04:25:17Z" finished-at="2016-11-16T04:25:22Z">
+      <class name="com.tech.plugandplay.api.GetBusiness">
+        <test-method status="PASS" signature="setup(java.lang.String, java.lang.String)[pri:0, instance:com.tech.plugandplay.api.GetBusiness@5442a311]" name="setup" is-config="true" duration-ms="16" started-at="2016-11-15T20:25:17Z" finished-at="2016-11-15T20:25:17Z">
+          <params>
+            <param index="0">
+              <value>
+                <![CDATA[2]]>
+              </value>
+            </param>
+            <param index="1">
+              <value>
+                <![CDATA[54.145.172.103]]>
+              </value>
+            </param>
+          </params>
+          <reporter-output>
+          </reporter-output>
+        </test-method> <!-- setup -->
+        <test-method status="PASS" signature="getCompany()[pri:0, instance:com.tech.plugandplay.api.GetBusiness@5442a311]" name="getCompany" duration-ms="4363" started-at="2016-11-15T20:25:17Z" finished-at="2016-11-15T20:25:22Z">
+          <reporter-output>
+          </reporter-output>
+        </test-method> <!-- getCompany -->
+      </class> <!-- com.tech.plugandplay.api.GetBusiness -->
+    </test> <!-- GetCluster -->
+  </suite> <!-- RestAPI-Get-Company -->
+</testng-results>

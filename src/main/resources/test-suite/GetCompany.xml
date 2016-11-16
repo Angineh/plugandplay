@@ -1,0 +1,12 @@
+<!DOCTYPE suite SYSTEM "http://beust.com/testng/testng-1.0.dtd" >
+<suite name="RestAPI-Get-Company">
+
+	<parameter name="id" value="1"/>
+	<parameter name="hostname" value="localhost"/>
+	
+  	<test name="GetCluster">   	
+    	<classes>  
+       		 <class name="com.tech.plugandplay.api.GetCompany"/>
+    	</classes>
+  	</test>
+</suite>
