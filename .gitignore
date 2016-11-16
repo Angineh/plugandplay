@@ -1,0 +1,11 @@
+# Maven
+/target/
+
+/test-output/
+
+# Eclipse
+.classpath
+.project
+.factorypath
+.settings/
+/.apt_generated/
