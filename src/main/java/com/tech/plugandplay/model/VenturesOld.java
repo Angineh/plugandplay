@@ -2,39 +2,27 @@ package com.tech.plugandplay.model;
 
 import java.io.Serializable;
 
-import javax.persistence.CascadeType;
 import javax.persistence.Column;
 import javax.persistence.Entity;
-import javax.persistence.FetchType;
 import javax.persistence.Id;
-import javax.persistence.JoinColumn;
-import javax.persistence.OneToOne;
 import javax.persistence.Table;
-
-import org.hibernate.annotations.ForeignKey;
 
 @SuppressWarnings("serial")
 @Entity
 @Table(name="ventures")
-public class Ventures implements Serializable {
+public class VenturesOld implements Serializable {
 	
 	@Id
 	@Column(name="ID")
 	private int id;
-	@Column(name="TIME_STAMP")
-	private String timestamp;
 	@Column(name="COMPANY_NAME")
-	private String companyName;
+	private String companyname;
 	@Column(name="BLURB")
 	private String blurb;
-	@Column(name="VERTICALS")
-	private String verticals;
 	@Column(name="WEBSITE")
 	private String website;
-	@Column(name="PNP_CONTACT")
-	private String pnpContact;
-	@Column(name="CONTACT_NAME")
-	private String contactName;
+	@Column(name="CONTACT")
+	private String contact;
 	@Column(name="EMAIL")
 	private String email;
 	@Column(name="PHONE_NUMBER")
@@ -43,10 +31,10 @@ public class Ventures implements Serializable {
 	private String totalMoneyRaised;
 	@Column(name="STAGE")
 	private String stage;
-	@Column(name="B2B_B2C")
-	private String b2bb2c;
-	@Column(name="EMPLOYEES")
-	private String employees;
+	@Column(name="BUSINESS_MODEL")
+	private String businessModel;
+	@Column(name="EMPLOYEE_COUNT")
+	private String employeeCount;
 	@Column(name="LOCATION")
 	private String location;
 	@Column(name="CITY")
@@ -59,42 +47,33 @@ public class Ventures implements Serializable {
 	private String background;
 	@Column(name="FOUNDED")
 	private String founded;
-	@Column(name="PARTNER_INTERESTS")
-	private String partnerInterests;
+	@Column(name="INDUSTRY")
+	private String industry;
 	@Column(name="CASE_STUDY")
 	private String caseStudy;
-	@Column(name="COMMENTS")
-	private String comments;
+	@Column(name="NOTES")
+	private String notes;
 	@Column(name="TAGS")
 	private String tags;
 	@Column(name="MATERIALS")
 	private String materials;
-	@Column(name="DATE_OF_INVESTMENT")
-	private String dataOfInvestment;
-	@Column(name="PORTFOLIO")
-	private boolean portfolio;
-	@OneToOne(fetch=FetchType.EAGER, cascade=CascadeType.ALL, orphanRemoval=true)
-    @JoinColumn(name="venture_id")
-    @ForeignKey(name = "top100")
-	private Top100 top100;
-	
+	@Column(name="PROGRAM")
+	private String program;
+	@Column(name="BATCH")
+	private String batch;
+	@Column(name="INVEST")
+	private String invest;
 	public int getId() {
 		return id;
 	}
 	public void setId(int id) {
 		this.id = id;
 	}
-	public String getTimestamp() {
-		return timestamp;
+	public String getCompanyname() {
+		return companyname;
 	}
-	public void setTimestamp(String timestamp) {
-		this.timestamp = timestamp;
-	}
-	public String getCompanyName() {
-		return companyName;
-	}
-	public void setCompanyName(String companyName) {
-		this.companyName = companyName;
+	public void setCompanyname(String companyname) {
+		this.companyname = companyname;
 	}
 	public String getBlurb() {
 		return blurb;
@@ -102,29 +81,17 @@ public class Ventures implements Serializable {
 	public void setBlurb(String blurb) {
 		this.blurb = blurb;
 	}
-	public String getVerticals() {
-		return verticals;
-	}
-	public void setVerticals(String verticals) {
-		this.verticals = verticals;
-	}
 	public String getWebsite() {
 		return website;
 	}
 	public void setWebsite(String website) {
 		this.website = website;
 	}
-	public String getPnpContact() {
-		return pnpContact;
+	public String getContact() {
+		return contact;
 	}
-	public void setPnpContact(String pnpContact) {
-		this.pnpContact = pnpContact;
-	}
-	public String getContactName() {
-		return contactName;
-	}
-	public void setContactName(String contactName) {
-		this.contactName = contactName;
+	public void setContact(String contact) {
+		this.contact = contact;
 	}
 	public String getEmail() {
 		return email;
@@ -150,17 +117,17 @@ public class Ventures implements Serializable {
 	public void setStage(String stage) {
 		this.stage = stage;
 	}
-	public String getB2bb2c() {
-		return b2bb2c;
+	public String getBusinessModel() {
+		return businessModel;
 	}
-	public void setB2bb2c(String b2bb2c) {
-		this.b2bb2c = b2bb2c;
+	public void setBusinessModel(String businessModel) {
+		this.businessModel = businessModel;
 	}
-	public String getEmployees() {
-		return employees;
+	public String getEmployeeCount() {
+		return employeeCount;
 	}
-	public void setEmployees(String employees) {
-		this.employees = employees;
+	public void setEmployeeCount(String employeeCount) {
+		this.employeeCount = employeeCount;
 	}
 	public String getLocation() {
 		return location;
@@ -198,11 +165,11 @@ public class Ventures implements Serializable {
 	public void setFounded(String founded) {
 		this.founded = founded;
 	}
-	public String getPartnerInterests() {
-		return partnerInterests;
+	public String getIndustry() {
+		return industry;
 	}
-	public void setPartnerInterests(String partnerInterests) {
-		this.partnerInterests = partnerInterests;
+	public void setIndustry(String industry) {
+		this.industry = industry;
 	}
 	public String getCaseStudy() {
 		return caseStudy;
@@ -210,11 +177,11 @@ public class Ventures implements Serializable {
 	public void setCaseStudy(String caseStudy) {
 		this.caseStudy = caseStudy;
 	}
-	public String getComments() {
-		return comments;
+	public String getNotes() {
+		return notes;
 	}
-	public void setComments(String comments) {
-		this.comments = comments;
+	public void setNotes(String notes) {
+		this.notes = notes;
 	}
 	public String getTags() {
 		return tags;
@@ -228,25 +195,26 @@ public class Ventures implements Serializable {
 	public void setMaterials(String materials) {
 		this.materials = materials;
 	}
-	public String getDataOfInvestment() {
-		return dataOfInvestment;
+	public String getProgram() {
+		return program;
 	}
-	public void setDataOfInvestment(String dataOfInvestment) {
-		this.dataOfInvestment = dataOfInvestment;
+	public void setProgram(String program) {
+		this.program = program;
 	}
-	public boolean isPortfolio() {
-		return portfolio;
+	public String getBatch() {
+		return batch;
 	}
-	public void setPortfolio(boolean portfolio) {
-		this.portfolio = portfolio;
+	public void setBatch(String batch) {
+		this.batch = batch;
 	}
-	public Top100 getTop100() {
-		return top100;
+	public String getInvest() {
+		return invest;
 	}
-	public void setTop100(Top100 top100) {
-		this.top100 = top100;
+	public void setInvest(String invest) {
+		this.invest = invest;
 	}
 	
 	
 	
+
 }

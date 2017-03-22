@@ -4,11 +4,15 @@ import java.util.List;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.hibernate.SQLQuery;
 import org.hibernate.Session;
+import org.hibernate.criterion.Order;
+import org.hibernate.criterion.Restrictions;
 
 import com.tech.plugandplay.model.Business;
 import com.tech.plugandplay.model.Cluster;
 import com.tech.plugandplay.model.Nodes;
+import com.tech.plugandplay.model.Top100;
 import com.tech.plugandplay.model.Ventures;
 
 public class HibernateUtil {
@@ -32,7 +36,7 @@ public class HibernateUtil {
 	     }
 	}
 	
-	public static Ventures getCompany(int id) {
+/*	public static Ventures getCompany(int id) {
 		 Session session = SessionFactoryUtil.getSessionFactory().getCurrentSession();
 	     try {
 	     session.getTransaction().begin();
@@ -47,7 +51,7 @@ public class HibernateUtil {
 	         log.fatal(e.getMessage(), e.fillInStackTrace());
 	         throw e;
 	     }
-	}
+	}*/
 	
 	public static Business getBusiness(int id) {
 		 Session session = SessionFactoryUtil.getSessionFactory().getCurrentSession();
@@ -98,6 +102,39 @@ public class HibernateUtil {
 		}
 	}
 	
+	public static Ventures newVenture(Ventures venture) {
+		Session session = SessionFactoryUtil.getSessionFactory().getCurrentSession();
+		try {
+			session.getTransaction().begin();
+			session.save(venture);
+			session.getTransaction().commit();
+			return venture;
+		  
+		} catch (RuntimeException e) {
+		     session.getTransaction().rollback();
+		     log.fatal(e.getMessage(), e.fillInStackTrace());
+		     throw e;
+		}
+	}
+	
+	public static Top100 addTop100(Top100 top100) {
+	
+		Session session = SessionFactoryUtil.getSessionFactory().getCurrentSession();
+		try {
+			session.getTransaction().begin();
+			session.save(top100);
+			session.getTransaction().commit();
+			return top100;
+		  
+		} catch (RuntimeException e) {
+		     session.getTransaction().rollback();
+		     log.fatal(e.getMessage(), e.fillInStackTrace());
+		     throw e;
+		}
+	}
+	
+
+	
 	public static Ventures newCompany(Ventures company) {
 		Session session = SessionFactoryUtil.getSessionFactory().getCurrentSession();
 		try {
@@ -143,13 +180,28 @@ public class HibernateUtil {
 		}
 	}
 	
-	public static Ventures updateCompany(Ventures company) {
+	public static Ventures updateVenture(Ventures venture) {
 		Session session = SessionFactoryUtil.getSessionFactory().getCurrentSession();
 		try {
 			session.getTransaction().begin();
-			session.update(company);
+			session.update(venture);
 			session.getTransaction().commit();
-			return company;
+			return venture;
+		  
+		} catch (RuntimeException e) {
+		     session.getTransaction().rollback();
+		     log.fatal(e.getMessage(), e.fillInStackTrace());
+		     throw e;
+		}
+	}
+	
+	public static Top100 updateTop100(Top100 top100) {
+		Session session = SessionFactoryUtil.getSessionFactory().getCurrentSession();
+		try {
+			session.getTransaction().begin();
+			session.update(top100);
+			session.getTransaction().commit();
+			return top100;
 		  
 		} catch (RuntimeException e) {
 		     session.getTransaction().rollback();
@@ -187,11 +239,40 @@ public class HibernateUtil {
 		}
 	}
 	
-	public static void deleteCompany(Ventures company) {
+	public static void deleteVenture(Ventures venture) {
 		Session session = SessionFactoryUtil.getSessionFactory().getCurrentSession();
 		try {
 			session.getTransaction().begin();		
-			session.delete(company);
+			session.delete(venture);
+			session.getTransaction().commit();
+		  
+		} catch (RuntimeException e) {
+		     session.getTransaction().rollback();
+		     log.fatal(e.getMessage(), e.fillInStackTrace());
+		     throw e;
+		}
+	}
+	
+	public static void deleteTop100(Top100 top100) {
+		Session session = SessionFactoryUtil.getSessionFactory().getCurrentSession();
+		try {
+			session.getTransaction().begin();		
+			session.delete(top100);
+			session.getTransaction().commit();
+		  
+		} catch (RuntimeException e) {
+		     session.getTransaction().rollback();
+		     log.fatal(e.getMessage(), e.fillInStackTrace());
+		     throw e;
+		}
+	}
+	
+	public static void deleteVentureTop100(int id) {
+		Session session = SessionFactoryUtil.getSessionFactory().getCurrentSession();
+		try {
+			session.getTransaction().begin();
+			SQLQuery sqlQuery = session.createSQLQuery("update Ventures set venture_id=NULL where id = "+id);
+			sqlQuery.executeUpdate();
 			session.getTransaction().commit();
 		  
 		} catch (RuntimeException e) {
@@ -219,16 +300,16 @@ public class HibernateUtil {
 	     }
 	}
 	
-	public static List<Ventures> getAllCompanies() {
+	public static List<Ventures> getAllVentures() {
 		 Session session = SessionFactoryUtil.getSessionFactory().getCurrentSession();
 	     try {
 	     session.getTransaction().begin();
 	     
 	     @SuppressWarnings("unchecked")
-		List<Ventures> companies = session.createCriteria(Ventures.class).list();
+		List<Ventures> ventures = session.createCriteria(Ventures.class).addOrder(Order.desc("id")).list();
 	     session.getTransaction().commit();
 	     
-	     return companies;
+	     return ventures;
 	      
 	     } catch (RuntimeException e) {
 	         session.getTransaction().rollback();
@@ -237,13 +318,103 @@ public class HibernateUtil {
 	     }
 	}
 	
+	public static List<Ventures> getVentureTop100(String ids) {
+		 Session session = SessionFactoryUtil.getSessionFactory().getCurrentSession();
+	     try {
+	     session.getTransaction().begin();
+	     
+	     @SuppressWarnings("unchecked")
+	     //List<Ventures> ventures = session.createCriteria(Ventures.class).add(Restrictions.in("id", ids)).list();
+		 List<Ventures> ventures = session.createQuery("from Ventures where id in ("+ids+")").list();
+	     session.getTransaction().commit();
+	     
+	     return ventures;
+	      
+	     } catch (RuntimeException e) {
+	         session.getTransaction().rollback();
+	         log.fatal(e.getMessage(), e.fillInStackTrace());
+	         throw e;
+	     }
+	}
+	
+	public static List<Top100> getAllTop100() {
+		 Session session = SessionFactoryUtil.getSessionFactory().getCurrentSession();
+	     try {
+	     session.getTransaction().begin();
+	     
+	     @SuppressWarnings("unchecked")
+		List<Top100> top100 = session.createCriteria(Top100.class).addOrder(Order.asc("order")).list();
+	     session.getTransaction().commit();
+	     
+	     return top100;
+	      
+	     } catch (RuntimeException e) {
+	         session.getTransaction().rollback();
+	         log.fatal(e.getMessage(), e.fillInStackTrace());
+	         throw e;
+	     }
+	}
+	
+	public static List<Ventures> getPortfolioCompanies() {
+		 Session session = SessionFactoryUtil.getSessionFactory().getCurrentSession();
+	     try {
+	     session.getTransaction().begin();
+	     
+	     @SuppressWarnings("unchecked")
+		List<Ventures> ventures = session.createQuery("from Ventures where portfolio = 1").list();
+	     session.getTransaction().commit();
+	     
+	     return ventures;
+	      
+	     } catch (RuntimeException e) {
+	         session.getTransaction().rollback();
+	         log.fatal(e.getMessage(), e.fillInStackTrace());
+	         throw e;
+	     }
+	}
+	
+		public static Ventures getVenture(int id) {
+		 Session session = SessionFactoryUtil.getSessionFactory().getCurrentSession();
+	     try {
+	     session.getTransaction().begin();
+	     
+	     Ventures ventures = (Ventures) session.get(Ventures.class, id);
+	     session.getTransaction().commit();
+	     
+	     return ventures;
+	      
+	     } catch (RuntimeException e) {
+	         session.getTransaction().rollback();
+	         log.fatal(e.getMessage(), e.fillInStackTrace());
+	         throw e;
+	     }
+	}
+		
+	public static Top100 getTop100(int venture_id) {
+			 Session session = SessionFactoryUtil.getSessionFactory().getCurrentSession();
+		     try {
+		     session.getTransaction().begin();
+		     
+		     Top100 top100 = (Top100) session.get(Top100.class, venture_id);
+		     session.getTransaction().commit();
+		     
+		     return top100;
+		      
+		     } catch (RuntimeException e) {
+		         session.getTransaction().rollback();
+		         log.fatal(e.getMessage(), e.fillInStackTrace());
+		         return null;
+		         //throw e;
+		     }
+	}
+	
 	public static List<Business> getAllBusinesses() {
 		 Session session = SessionFactoryUtil.getSessionFactory().getCurrentSession();
 	     try {
 	     session.getTransaction().begin();
 	     
 	     @SuppressWarnings("unchecked")
-		List<Business> businesses = session.createCriteria(Business.class).list();
+		List<Business> businesses = session.createCriteria(Business.class).addOrder(Order.desc("id")).list();
 	     session.getTransaction().commit();
 	     
 	     return businesses;

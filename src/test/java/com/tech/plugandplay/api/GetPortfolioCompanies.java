@@ -11,7 +11,7 @@ import com.jayway.restassured.RestAssured;
 import com.jayway.restassured.response.Response;
 import com.tech.plugandplay.util.CommonUtil;
 
-public class GetAllCompanies {
+public class GetPortfolioCompanies {
 	
 	static String hostname;
 	
@@ -25,7 +25,7 @@ public class GetAllCompanies {
 		
 	@Test
 	public static void getActiveClusters(){
-		Response response = RestAssured.get("http://"+hostname+":8080/plugandplay/api/v1/companies/all");
+		Response response = RestAssured.get("http://"+hostname+":8080/plugandplay/api/v1/ventures/portfolio");
 		System.out.println("Get all companies status code: "+response.getStatusCode());
 		Assert.assertEquals(response.getStatusCode(), 200);
 		System.out.println("List of companies.");

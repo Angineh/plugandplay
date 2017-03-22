@@ -11,30 +11,31 @@ import com.jayway.restassured.RestAssured;
 import com.jayway.restassured.response.Response;
 import com.tech.plugandplay.util.CommonUtil;
 
-public class GetAllCompanies {
+public class GetTop100 {
 	
-	static String hostname;
+	static String hostname = "localhost";
 	
-	@BeforeClass
+/*	@BeforeClass
 	@Parameters({"hostname"})
 	public static void setup(String host)
 	{
 		hostname = CommonUtil.assignSysProp("SERVER", host);
 		
-	}
+	}*/
 		
 	@Test
-	public static void getActiveClusters(){
-		Response response = RestAssured.get("http://"+hostname+":8080/plugandplay/api/v1/companies/all");
-		System.out.println("Get all companies status code: "+response.getStatusCode());
+	public static void getTop100(){
+		Response response = RestAssured.get("http://"+hostname+":8080/plugandplay/api/v1/top100/all");
+		System.out.println("Get top 100 status code: "+response.getStatusCode());
 		Assert.assertEquals(response.getStatusCode(), 200);
-		System.out.println("List of companies.");
+		System.out.println("List of top 100 ventures.");
 		JSONArray companies = new JSONArray(response.getBody().asString());
 		
 		for (int i = 0; i < companies.length(); i++) {
 			JSONObject company = companies.getJSONObject(i);
 			System.out.println("Id: "+company.getInt("id"));
 			System.out.println("Name: "+company.getString("companyName"));
+			System.out.println("Top 100 order: "+company.getJSONObject("top100").getInt("order"));
 		}
 	}
 	

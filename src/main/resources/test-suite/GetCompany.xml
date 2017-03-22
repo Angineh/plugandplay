@@ -1,8 +1,9 @@
 <!DOCTYPE suite SYSTEM "http://beust.com/testng/testng-1.0.dtd" >
 <suite name="RestAPI-Get-Company">
 
-	<parameter name="id" value="1"/>
+	<parameter name="id" value="100"/>
 	<parameter name="hostname" value="localhost"/>
+	<!-- <parameter name="hostname" value="54.145.172.103"/> -->
 	
   	<test name="GetCluster">   	
     	<classes>  

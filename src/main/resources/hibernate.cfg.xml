@@ -22,5 +22,6 @@
   <property name="hibernate.current_session_context_class">thread</property>
   <mapping class="com.tech.plugandplay.model.Ventures"/>
   <mapping class="com.tech.plugandplay.model.Business"/>
+  <mapping class="com.tech.plugandplay.model.Top100"/>
 </session-factory>
 </hibernate-configuration>

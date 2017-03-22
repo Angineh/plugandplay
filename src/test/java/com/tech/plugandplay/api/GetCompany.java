@@ -25,7 +25,7 @@ public class GetCompany {
 		
 	@Test
 	public static void getCompany(){
-		Response response = RestAssured.get("http://"+hostname+":8080/plugandplay/api/v1/company/"+id);
+		Response response = RestAssured.get("http://"+hostname+":8080/plugandplay/api/v1/ventures/"+id);
 		System.out.println("Get company status code: "+response.getStatusCode());
 		Assert.assertEquals(response.getStatusCode(), 200);
 		System.out.println(response.getBody().asString());

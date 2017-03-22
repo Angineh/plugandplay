@@ -212,6 +212,7 @@ public class Constants {
 	}
 	
 	public interface GenericErrorMessages {
+		String EXCEEDED_SIZE = "The top 100 list already has one hundred entries.";
 		String INPUT_JSON = "Input JSON is NULL or Empty.";
 		String CURRENT_PROVIDER = "Only provider 'fyre' is currently supported.";
 		String CREDENTIALS_REQUIRED = "Both user and credentials are required to place an order.";
