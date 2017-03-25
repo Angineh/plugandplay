@@ -1,7 +1,10 @@
 package com.tech.plugandplay.api;
 
 import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.Set;
+
+import org.jboss.resteasy.plugins.interceptors.CorsFilter;
 
 import javax.ws.rs.core.Application;
 
@@ -13,6 +16,13 @@ public class RestApplication extends Application {
     }
     @Override
     public Set<Object> getSingletons() {
-        return singletons;
+    	 if (singletons == null) {
+             CorsFilter corsFilter = new CorsFilter();
+             corsFilter.getAllowedOrigins().add("*");
+
+             singletons = new LinkedHashSet<Object>();
+             singletons.add(corsFilter);
+         }
+         return singletons;
     }
 } 

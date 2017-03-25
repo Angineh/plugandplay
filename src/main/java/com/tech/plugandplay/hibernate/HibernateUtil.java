@@ -271,7 +271,7 @@ public class HibernateUtil {
 		Session session = SessionFactoryUtil.getSessionFactory().getCurrentSession();
 		try {
 			session.getTransaction().begin();
-			SQLQuery sqlQuery = session.createSQLQuery("update Ventures set venture_id=NULL where id = "+id);
+			SQLQuery sqlQuery = session.createSQLQuery("update ventures set venture_id=NULL where id = "+id);
 			sqlQuery.executeUpdate();
 			session.getTransaction().commit();
 		  

@@ -57,7 +57,7 @@ public class RestService {
        	if(!ventures.isEmpty()){
     		return Response.ok(ventures).header("Access-Control-Allow-Origin", "*").build();
     	}else{
-    		return Response.status(Response.Status.NOT_FOUND).entity("Could not find any companies.").build();
+    		return Response.status(Response.Status.NOT_FOUND).entity("Could not find any companies.").header("Access-Control-Allow-Origin", "*").build();
     	}        
     }
 	
@@ -77,25 +77,25 @@ public class RestService {
        		List<Ventures> ventures = HibernateUtil.getVentureTop100(ids.toString().substring(0, ids.toString().length()-1));
        		return Response.ok(ventures).header("Access-Control-Allow-Origin", "*").build();
     	}else{
-    		return Response.status(Response.Status.NOT_FOUND).entity("Could not find any top 100.").build();
+    		return Response.status(Response.Status.NOT_FOUND).entity("Could not find any top 100.").header("Access-Control-Allow-Origin", "*").build();
     	}        
     }
 	
 	@DELETE
-	@Path("/top100/delete")
+	@Path("/top100/delete/{id}")
 	@Consumes("application/json")
 	@Produces("application/json")
 	@Formatted
-    public Response deleteFromTop100(String json){
-		log.info("JSON body:"+ json);
-		JSONObject body = new JSONObject(json);
-		Top100 deleteMe = HibernateUtil.getTop100(body.getInt("id"));
+    public Response deleteFromTop100(@PathParam("id") int id){
+		log.info("Delete from top 100 path param:"+ id);
+		
+		Top100 deleteMe = HibernateUtil.getTop100(id);
 		if(deleteMe == null){
-			return Response.status(Constants.HTTPCodes.BAD_REQUEST).entity("Could not delete top 100!").build();
+			return Response.status(Constants.HTTPCodes.BAD_REQUEST).entity("Could not delete top 100!").header("Access-Control-Allow-Origin", "*").build();
 		}
-		HibernateUtil.deleteVentureTop100(body.getInt("id"));
+		HibernateUtil.deleteVentureTop100(id);
 	    HibernateUtil.deleteTop100(deleteMe);
-		return Response.ok(deleteMe).build();
+		return Response.ok(deleteMe).header("Access-Control-Allow-Origin", "*").build();
 		
 	}
 	
@@ -116,7 +116,7 @@ public class RestService {
 			ObjectMapper mapper = new ObjectMapper();
 			String jsonInString = mapper.writeValueAsString("The order value "+order+" is not valid! Please try again.");
 			log.info(jsonInString);
-			return Response.status(Constants.HTTPCodes.BAD_REQUEST).entity(jsonInString).build();	
+			return Response.status(Constants.HTTPCodes.BAD_REQUEST).entity(jsonInString).header("Access-Control-Allow-Origin", "*").build();	
 		}
 		
 	    for(int i = current.getOrder(); i < top100list.size(); i++){
@@ -136,7 +136,7 @@ public class RestService {
 	    	HibernateUtil.updateTop100(list);
 	    }
 		
-		return Response.ok(current).build();
+		return Response.ok(current).header("Access-Control-Allow-Origin", "*").build();
 	}
 	
 	@GET
@@ -149,7 +149,7 @@ public class RestService {
        	if(!ventures.isEmpty()){
     		return Response.ok(ventures).header("Access-Control-Allow-Origin", "*").build();
     	}else{
-    		return Response.status(Response.Status.NOT_FOUND).entity("Could not find any companies.").build();
+    		return Response.status(Response.Status.NOT_FOUND).entity("Could not find any companies.").header("Access-Control-Allow-Origin", "*").build();
     	}        
     }
 	
@@ -163,7 +163,7 @@ public class RestService {
        	if(!ventures.isEmpty()){
     		return Response.ok(ventures).header("Access-Control-Allow-Origin", "*").build();
     	}else{
-    		return Response.status(Response.Status.NOT_FOUND).entity("Could not find any companies.").build();
+    		return Response.status(Response.Status.NOT_FOUND).entity("Could not find any companies.").header("Access-Control-Allow-Origin", "*").build();
     	}        
     }
 	
@@ -178,7 +178,7 @@ public class RestService {
     	if(venture != null){
     		return Response.ok(venture).header("Access-Control-Allow-Origin", "*").build();
     	}else{
-    		return Response.status(Response.Status.NOT_FOUND).entity("Entity not found for ID: " + id).build();
+    		return Response.status(Response.Status.NOT_FOUND).entity("Entity not found for ID: " + id).header("Access-Control-Allow-Origin", "*").build();
     	}
 		
 	}
@@ -196,11 +196,11 @@ public class RestService {
 		ObjectMapper mapper = new ObjectMapper();
 		if(top100list.size()==100){
 			String jsonInString = mapper.writeValueAsString(Constants.GenericErrorMessages.EXCEEDED_SIZE);
-			return Response.status(Constants.HTTPCodes.BAD_REQUEST).entity(jsonInString).build();
+			return Response.status(Constants.HTTPCodes.BAD_REQUEST).entity(jsonInString).header("Access-Control-Allow-Origin", "*").build();
 		}
 		//Check to see if part of top100 already
 		if(HibernateUtil.getTop100(body.getInt("id")) != null){
-			return Response.status(Constants.HTTPCodes.BAD_REQUEST).entity(mapper.writeValueAsString("Top 100 venture with id "+body.getInt("id")+" already exists!")).build();
+			return Response.status(Constants.HTTPCodes.BAD_REQUEST).entity(mapper.writeValueAsString("Top 100 venture with id "+body.getInt("id")+" already exists!")).header("Access-Control-Allow-Origin", "*").build();
 		}
 		Top100 top100 = new Top100();
 		top100.setOrder(top100list.size()+1);
@@ -209,7 +209,7 @@ public class RestService {
 		Ventures venture = HibernateUtil.getVenture(body.getInt("id"));
 		venture.setTop100(top100);
 		HibernateUtil.updateVenture(venture);
-		return Response.ok(top100).build();
+		return Response.ok(top100).header("Access-Control-Allow-Origin", "*").build();
 	}
 	
 	@POST
@@ -434,7 +434,7 @@ public class RestService {
 		venture.setTimestamp(sdf.format(time));
 
 		venture = HibernateUtil.newVenture(venture);
-		return Response.ok(venture).build();
+		return Response.ok(venture).header("Access-Control-Allow-Origin", "*").build();
 		
 	}
 
@@ -466,7 +466,7 @@ public class RestService {
     	if(business != null){
     		return Response.ok(business).header("Access-Control-Allow-Origin", "*").build();
     	}else{
-    		return Response.status(Response.Status.NOT_FOUND).entity("Entity not found for ID: " + id).build();
+    		return Response.status(Response.Status.NOT_FOUND).entity("Entity not found for ID: " + id).header("Access-Control-Allow-Origin", "*").build();
     	}
 		
 	}
@@ -481,7 +481,7 @@ public class RestService {
        	if(!businesess.isEmpty()){
     		return Response.ok(businesess).header("Access-Control-Allow-Origin", "*").build();
     	}else{
-    		return Response.status(Response.Status.NOT_FOUND).entity("Could not find any companies.").build();
+    		return Response.status(Response.Status.NOT_FOUND).entity("Could not find any companies.").header("Access-Control-Allow-Origin", "*").build();
     	}        
     }
 	
