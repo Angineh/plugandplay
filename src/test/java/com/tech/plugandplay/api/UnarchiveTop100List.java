@@ -11,21 +11,18 @@ import com.jayway.restassured.RestAssured;
 import com.jayway.restassured.http.ContentType;
 import com.jayway.restassured.response.Response;
 
-public class DeleteTop100 {
+public class UnarchiveTop100List {
 	
 	
 	@Test
 	public static void test() throws IOException {
 		
-		//for(int i = 206; i < 207; i ++){
-			int id = 100;
-			//String content = "{\"id\":"+i+"}";
-			Response response = RestAssured.given().contentType(ContentType.JSON).delete("http://localhost:8080/plugandplay/api/v1/top100/delete/"+id);
-			
-			System.out.println(response.getStatusLine());
-			System.out.println(response.getBody().asString());
-			
-		//}
+		int id = 1;
+		String content = "{\"id\":"+id+"}";
+		Response response = RestAssured.given().contentType(ContentType.JSON).body(content).post("http://localhost:8080/plugandplay/api/v1/top100/unarchivelist");
+		
+		System.out.println(response.getStatusLine());
+		System.out.println(response.getBody().asString());
 		
 	}
 	

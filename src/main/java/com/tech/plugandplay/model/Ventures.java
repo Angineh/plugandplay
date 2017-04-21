@@ -6,65 +6,96 @@ import javax.persistence.CascadeType;
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.FetchType;
+import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
 import javax.persistence.JoinColumn;
 import javax.persistence.OneToOne;
 import javax.persistence.Table;
 
 import org.hibernate.annotations.ForeignKey;
+import org.hibernate.search.annotations.Analyze;
+import org.hibernate.search.annotations.Field;
+import org.hibernate.search.annotations.Index;
+import org.hibernate.search.annotations.Indexed;
+import org.hibernate.search.annotations.IndexedEmbedded;
+import org.hibernate.search.annotations.Store;
 
 @SuppressWarnings("serial")
 @Entity
+@Indexed
 @Table(name="ventures")
 public class Ventures implements Serializable {
 	
 	@Id
+	@GeneratedValue
 	@Column(name="ID")
 	private int id;
 	@Column(name="TIME_STAMP")
 	private String timestamp;
+	@Field(index=Index.YES, analyze=Analyze.YES, store=Store.NO)
 	@Column(name="COMPANY_NAME")
 	private String companyName;
+	@Field(index=Index.YES, analyze=Analyze.YES, store=Store.NO)
 	@Column(name="BLURB")
 	private String blurb;
+	@Field(index=Index.YES, analyze=Analyze.YES, store=Store.NO)
 	@Column(name="VERTICALS")
 	private String verticals;
+	@Field(index=Index.YES, analyze=Analyze.YES, store=Store.NO)
 	@Column(name="WEBSITE")
 	private String website;
+	@Field(index=Index.YES, analyze=Analyze.YES, store=Store.NO)
 	@Column(name="PNP_CONTACT")
 	private String pnpContact;
+	@Field(index=Index.YES, analyze=Analyze.YES, store=Store.NO)
 	@Column(name="CONTACT_NAME")
 	private String contactName;
+	@Field(index=Index.YES, analyze=Analyze.YES, store=Store.NO)
 	@Column(name="EMAIL")
 	private String email;
+	@Field(index=Index.YES, analyze=Analyze.YES, store=Store.NO)
 	@Column(name="PHONE_NUMBER")
 	private String phoneNumber;
+	@Field(index=Index.YES, analyze=Analyze.YES, store=Store.NO)
 	@Column(name="TOTAL_MONEY_RAISED")
 	private String totalMoneyRaised;
+	@Field(index=Index.YES, analyze=Analyze.YES, store=Store.NO)
 	@Column(name="STAGE")
 	private String stage;
+	@Field(index=Index.YES, analyze=Analyze.YES, store=Store.NO)
 	@Column(name="B2B_B2C")
 	private String b2bb2c;
+	@Field(index=Index.YES, analyze=Analyze.YES, store=Store.NO)
 	@Column(name="EMPLOYEES")
 	private String employees;
+	@Field(index=Index.YES, analyze=Analyze.YES, store=Store.NO)
 	@Column(name="LOCATION")
 	private String location;
+	@Field(index=Index.YES, analyze=Analyze.YES, store=Store.NO)
 	@Column(name="CITY")
 	private String city;
+	@Field(index=Index.YES, analyze=Analyze.YES, store=Store.NO)
 	@Column(name="COMPETITION")
 	private String competition;
+	@Field(index=Index.YES, analyze=Analyze.YES, store=Store.NO)
 	@Column(name="ADVANTAGE")
 	private String advantage;
+	@Field(index=Index.YES, analyze=Analyze.YES, store=Store.NO)
 	@Column(name="BACKGROUND")
 	private String background;
+	@Field(index=Index.YES, analyze=Analyze.YES, store=Store.NO)
 	@Column(name="FOUNDED")
 	private String founded;
+	@Field(index=Index.YES, analyze=Analyze.YES, store=Store.NO)
 	@Column(name="PARTNER_INTERESTS")
 	private String partnerInterests;
+	@Field(index=Index.YES, analyze=Analyze.YES, store=Store.NO)
 	@Column(name="CASE_STUDY")
 	private String caseStudy;
+	@Field(index=Index.YES, analyze=Analyze.YES, store=Store.NO)
 	@Column(name="COMMENTS")
 	private String comments;
+	@Field(index=Index.YES, analyze=Analyze.YES, store=Store.NO)
 	@Column(name="TAGS")
 	private String tags;
 	@Column(name="MATERIALS")
@@ -73,6 +104,7 @@ public class Ventures implements Serializable {
 	private String dataOfInvestment;
 	@Column(name="PORTFOLIO")
 	private boolean portfolio;
+	@IndexedEmbedded
 	@OneToOne(fetch=FetchType.EAGER, cascade=CascadeType.ALL, orphanRemoval=true)
     @JoinColumn(name="venture_id")
     @ForeignKey(name = "top100")

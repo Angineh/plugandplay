@@ -17,10 +17,10 @@ public class AddTop100 {
 	@Test
 	public static void test() throws IOException {
 		
-		for(int i = 633; i < 634; i ++){
+		for(int i = 50; i < 57; i ++){
 			
 			String content = "{\"id\":"+i+"}";
-			Response response = RestAssured.given().contentType(ContentType.JSON).body(content).post("http://54.145.172.103:8080/plugandplay/api/v1/ventures/addtop100");
+			Response response = RestAssured.given().contentType(ContentType.JSON).body(content).post("http://localhost:8080/plugandplay/api/v1/ventures/addtop100");
 			
 			System.out.println(response.getStatusLine());
 			System.out.println(response.getBody().asString());

@@ -9,6 +9,7 @@ import org.testng.annotations.Test;
 
 import com.jayway.restassured.RestAssured;
 import com.jayway.restassured.response.Response;
+import com.tech.plugandplay.model.Top100List;
 import com.tech.plugandplay.util.CommonUtil;
 
 public class GetTop100 {

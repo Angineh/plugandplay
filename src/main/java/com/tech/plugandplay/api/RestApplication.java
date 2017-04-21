@@ -17,8 +17,7 @@ public class RestApplication extends Application {
     @Override
     public Set<Object> getSingletons() {
     	 if (singletons == null) {
-             CorsFilter corsFilter = new CorsFilter();
-             corsFilter.getAllowedOrigins().add("*");
+             CORSFilter corsFilter = new CORSFilter();
 
              singletons = new LinkedHashSet<Object>();
              singletons.add(corsFilter);

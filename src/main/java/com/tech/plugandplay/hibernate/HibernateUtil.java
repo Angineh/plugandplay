@@ -4,15 +4,22 @@ import java.util.List;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.hibernate.Query;
 import org.hibernate.SQLQuery;
 import org.hibernate.Session;
+import org.hibernate.Transaction;
 import org.hibernate.criterion.Order;
+import org.hibernate.criterion.Projections;
 import org.hibernate.criterion.Restrictions;
+import org.hibernate.search.FullTextSession;
+import org.hibernate.search.Search;
+import org.hibernate.search.query.dsl.QueryBuilder;
 
 import com.tech.plugandplay.model.Business;
 import com.tech.plugandplay.model.Cluster;
 import com.tech.plugandplay.model.Nodes;
 import com.tech.plugandplay.model.Top100;
+import com.tech.plugandplay.model.Top100List;
 import com.tech.plugandplay.model.Ventures;
 
 public class HibernateUtil {
@@ -133,6 +140,22 @@ public class HibernateUtil {
 		}
 	}
 	
+	public static Top100List addTop100List(Top100List top100list) {
+		
+		Session session = SessionFactoryUtil.getSessionFactory().getCurrentSession();
+		try {
+			session.getTransaction().begin();
+			session.save(top100list);
+			session.getTransaction().commit();
+			return top100list;
+		  
+		} catch (RuntimeException e) {
+		     session.getTransaction().rollback();
+		     log.fatal(e.getMessage(), e.fillInStackTrace());
+		     throw e;
+		}
+	}
+	
 
 	
 	public static Ventures newCompany(Ventures company) {
@@ -202,6 +225,21 @@ public class HibernateUtil {
 			session.update(top100);
 			session.getTransaction().commit();
 			return top100;
+		  
+		} catch (RuntimeException e) {
+		     session.getTransaction().rollback();
+		     log.fatal(e.getMessage(), e.fillInStackTrace());
+		     throw e;
+		}
+	}
+	
+	public static Top100List updateTop100List(Top100List top100list) {
+		Session session = SessionFactoryUtil.getSessionFactory().getCurrentSession();
+		try {
+			session.getTransaction().begin();
+			session.update(top100list);
+			session.getTransaction().commit();
+			return top100list;
 		  
 		} catch (RuntimeException e) {
 		     session.getTransaction().rollback();
@@ -318,14 +356,126 @@ public class HibernateUtil {
 	     }
 	}
 	
-	public static List<Ventures> getVentureTop100(String ids) {
+	public static List<Ventures> getVenturesPage(int page) {
+		if(page == 1){
+			 page = 0;
+		 } else {
+			 page = page*10;
+		 }
 		 Session session = SessionFactoryUtil.getSessionFactory().getCurrentSession();
 	     try {
 	     session.getTransaction().begin();
 	     
 	     @SuppressWarnings("unchecked")
+		List<Ventures> ventures = session.createCriteria(Ventures.class).addOrder(Order.desc("id")).setFirstResult(page).setMaxResults(10).list();
+	     session.getTransaction().commit();
+	     
+	     return ventures;
+	      
+	     } catch (RuntimeException e) {
+	         session.getTransaction().rollback();
+	         log.fatal(e.getMessage(), e.fillInStackTrace());
+	         throw e;
+	     }
+	}
+	
+	public static void updateLuceneIndex() {
+		 Session session = SessionFactoryUtil.getSessionFactory().getCurrentSession();
+		 FullTextSession fullTextSession = Search.getFullTextSession(session);
+		 try {
+			fullTextSession.createIndexer().startAndWait();
+		} catch (InterruptedException e1) {
+			// TODO Auto-generated catch block
+			log.fatal("Could not create hibernate search index: "+e1.getMessage(),e1.fillInStackTrace());
+		}
+	}
+	
+	public static List<Ventures> getVenturesPage(int page, String query) {
+		 if(page == 1){
+			 page = 0;
+		 } else {
+			 page = page*10;
+		 }
+		 Session session = SessionFactoryUtil.getSessionFactory().getCurrentSession();
+		 FullTextSession fullTextSession = Search.getFullTextSession(session);
+	     try {
+	    	 Transaction tx = fullTextSession.beginTransaction();
+	    	// create native Lucene query unsing the query DSL
+	    	// alternatively you can write the Lucene query using the Lucene query parser
+	    	// or the Lucene programmatic API. The Hibernate Search DSL is recommended though
+	    	QueryBuilder qb = fullTextSession.getSearchFactory()
+	    	    .buildQueryBuilder().forEntity( Ventures.class ).get();
+	    	org.apache.lucene.search.Query lq = qb.keyword().onFields("companyName", "blurb", "verticals", "website", "pnpContact", "contactName", "email", "phoneNumber", "totalMoneyRaised", "stage", "b2bb2c", "employees", "location", "city", "competition", "advantage", "background", "founded", "partnerInterests", "caseStudy", "comments", "tags").matching(query).createQuery();
+	   
+	    	// wrap Lucene query in a org.hibernate.Query
+	    	org.hibernate.Query hibQuery = fullTextSession.createFullTextQuery(lq, Ventures.class);
+
+	    	// execute search
+	    	@SuppressWarnings("unchecked")
+			List<Ventures> ventures = hibQuery.setFirstResult(page).setMaxResults(10).list();
+	    	  
+	    	tx.commit();
+	     
+	     return ventures;
+	      
+	     } catch (RuntimeException e) {
+	         session.getTransaction().rollback();
+	         log.fatal(e.getMessage(), e.fillInStackTrace());
+	         throw e;
+	     }
+	}
+	public static int getVenturesSearchCount(String query) {
+		 Session session = SessionFactoryUtil.getSessionFactory().getCurrentSession();
+		 FullTextSession fullTextSession = Search.getFullTextSession(session);
+	     try {
+	    	 Transaction tx = fullTextSession.beginTransaction();
+	    	// create native Lucene query unsing the query DSL
+	    	// alternatively you can write the Lucene query using the Lucene query parser
+	    	// or the Lucene programmatic API. The Hibernate Search DSL is recommended though
+	    	QueryBuilder qb = fullTextSession.getSearchFactory()
+	    	    .buildQueryBuilder().forEntity( Ventures.class ).get();
+	    	org.apache.lucene.search.Query lq = qb.keyword().onFields("companyName", "blurb", "verticals", "website", "pnpContact", "contactName", "email", "phoneNumber", "totalMoneyRaised", "stage", "b2bb2c", "employees", "location", "city", "competition", "advantage", "background", "founded", "partnerInterests", "caseStudy", "comments", "tags").matching(query).createQuery();
+	    	
+	    	// wrap Lucene query in a org.hibernate.Query
+	    	int count = fullTextSession.createFullTextQuery(lq, Ventures.class).getResultSize();
+
+	    	tx.commit();
+	     
+	     return count;
+	      
+	     } catch (RuntimeException e) {
+	         session.getTransaction().rollback();
+	         log.fatal(e.getMessage(), e.fillInStackTrace());
+	         throw e;
+	     }
+	}
+	
+	public static long getVenturesCount() {
+		 Session session = SessionFactoryUtil.getSessionFactory().getCurrentSession();
+	     try {
+	     session.getTransaction().begin();
+	     
+	     @SuppressWarnings("unchecked")
+		 long count = (long) session.createCriteria(Ventures.class).setProjection(Projections.rowCount()).uniqueResult();
+	     session.getTransaction().commit();
+	     
+	     return count;
+	      
+	     } catch (RuntimeException e) {
+	         session.getTransaction().rollback();
+	         log.fatal(e.getMessage(), e.fillInStackTrace());
+	         throw e;
+	     }
+	}
+	
+	public static List<Ventures> getVentureTop100(String ids) {
+		 Session session = SessionFactoryUtil.getSessionFactory().getCurrentSession();
+	     try {
+	     session.getTransaction().begin();
+	     //log.info("Ids:"+ids);
+	     @SuppressWarnings("unchecked")
 	     //List<Ventures> ventures = session.createCriteria(Ventures.class).add(Restrictions.in("id", ids)).list();
-		 List<Ventures> ventures = session.createQuery("from Ventures where id in ("+ids+")").list();
+		 List<Ventures> ventures = session.createQuery("from Ventures where id in ("+ids+") ORDER BY FIELD(id,"+ids+")").list();
 	     session.getTransaction().commit();
 	     
 	     return ventures;
@@ -343,10 +493,46 @@ public class HibernateUtil {
 	     session.getTransaction().begin();
 	     
 	     @SuppressWarnings("unchecked")
-		List<Top100> top100 = session.createCriteria(Top100.class).addOrder(Order.asc("order")).list();
+		 List<Top100> top100 = session.createCriteria(Top100.class).addOrder(Order.asc("order")).list();
 	     session.getTransaction().commit();
 	     
 	     return top100;
+	      
+	     } catch (RuntimeException e) {
+	         session.getTransaction().rollback();
+	         log.fatal(e.getMessage(), e.fillInStackTrace());
+	         throw e;
+	     }
+	}
+	
+	public static List<Top100List> getTop100Lists() {
+		 Session session = SessionFactoryUtil.getSessionFactory().getCurrentSession();
+	     try {
+	     session.getTransaction().begin();
+	     
+	     @SuppressWarnings("unchecked")
+		 List<Top100List> top100list = session.createCriteria(Top100List.class).add(Restrictions.eq("archive", new Boolean(false))).list();
+	     session.getTransaction().commit();
+	     
+	     return top100list;
+	      
+	     } catch (RuntimeException e) {
+	         session.getTransaction().rollback();
+	         log.fatal(e.getMessage(), e.fillInStackTrace());
+	         throw e;
+	     }
+	}
+	
+	public static List<Top100List> getTop100ListsArchived() {
+		 Session session = SessionFactoryUtil.getSessionFactory().getCurrentSession();
+	     try {
+	     session.getTransaction().begin();
+	     
+	     @SuppressWarnings("unchecked")
+		 List<Top100List> top100list = session.createCriteria(Top100List.class).add(Restrictions.eq("archive", new Boolean(true))).list();
+	     session.getTransaction().commit();
+	     
+	     return top100list;
 	      
 	     } catch (RuntimeException e) {
 	         session.getTransaction().rollback();
@@ -406,6 +592,49 @@ public class HibernateUtil {
 		         return null;
 		         //throw e;
 		     }
+	}
+	
+	public static Top100List getTop100List(int id) {
+		 Session session = SessionFactoryUtil.getSessionFactory().getCurrentSession();
+	     try {
+	     session.getTransaction().begin();
+	     
+	     Top100List top100list = (Top100List) session.get(Top100List.class, id);
+	     session.getTransaction().commit();
+	     
+	     return top100list;
+	      
+	     } catch (RuntimeException e) {
+	         session.getTransaction().rollback();
+	         log.fatal(e.getMessage(), e.fillInStackTrace());
+	         return null;
+	         //throw e;
+	     }
+	}
+	
+	public static Top100List getTop100ListByName(String listName) {
+		 Session session = SessionFactoryUtil.getSessionFactory().getCurrentSession();
+	     try {
+	     session.getTransaction().begin();
+	     @SuppressWarnings("rawtypes")
+		 List tmp = session.createCriteria(Top100List.class).add(Restrictions.eq("listName", listName)).list();
+	     session.getTransaction().commit();
+	     Top100List top100list = new Top100List();
+	     if(!tmp.isEmpty()){
+	    	 top100list = (Top100List) tmp.get(0);
+		     log.info("Found list: "+top100list.getListName());
+		     return top100list; 
+	     }else{
+	    	 return null;
+	     }
+	     
+	      
+	     } catch (RuntimeException e) {
+	         session.getTransaction().rollback();
+	         log.fatal(e.getMessage(), e.fillInStackTrace());
+	         return null;
+	         //throw e;
+	     }
 	}
 	
 	public static List<Business> getAllBusinesses() {

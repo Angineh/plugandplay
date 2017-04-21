@@ -38,6 +38,7 @@ import com.tech.plugandplay.model.Cluster;
 import com.tech.plugandplay.model.Initialize;
 import com.tech.plugandplay.model.Nodes;
 import com.tech.plugandplay.model.Top100;
+import com.tech.plugandplay.model.Top100List;
 import com.tech.plugandplay.model.Ventures;
 import com.tech.plugandplay.util.AsyncRequest;
 import com.tech.plugandplay.util.Constants;
@@ -62,6 +63,38 @@ public class RestService {
     }
 	
 	@GET
+    @Path("/ventures/query/{page}")
+    @Produces(MediaType.APPLICATION_JSON)
+    @Formatted
+    public Response getVenturesPage(@PathParam("page") int page, @QueryParam("query") String query) {
+		
+		JSONObject pagination = new JSONObject();
+		List<Ventures> ventures = null;
+		if(query.length() > 2 && query.length() < 32 ){
+			pagination.put("count", HibernateUtil.getVenturesSearchCount(query));
+	    	ventures = HibernateUtil.getVenturesPage(page, query);
+	    	pagination.put("data", ventures);
+		} else {
+			pagination.put("count", HibernateUtil.getVenturesCount());
+	    	ventures = HibernateUtil.getVenturesPage(page);
+	    	pagination.put("data", ventures);
+		}
+       	if(!ventures.isEmpty()){
+    		return Response.ok(pagination.toString()).header("Access-Control-Allow-Origin", "*").build();
+    	}else{
+    		return Response.status(Response.Status.NO_CONTENT).entity("Could not find any content.").header("Access-Control-Allow-Origin", "*").build();
+    	}        
+    }
+	
+	@POST
+    @Path("/lucene")
+    public Response updateLucene() {
+		HibernateUtil.updateLuceneIndex();
+		return Response.ok().build();
+		
+	}
+	
+	@GET
     @Path("/top100/all")
     @Produces(MediaType.APPLICATION_JSON)
     @Formatted
@@ -81,6 +114,34 @@ public class RestService {
     	}        
     }
 	
+	@GET
+    @Path("/top100/lists")
+    @Produces(MediaType.APPLICATION_JSON)
+    @Formatted
+    public Response getTop100Lists() {
+		//TODO
+    	List<Top100List> top100list = HibernateUtil.getTop100Lists();
+       	if(!top100list.isEmpty()){
+       		return Response.ok(top100list).header("Access-Control-Allow-Origin", "*").build();
+    	}else{
+    		return Response.status(Response.Status.NOT_FOUND).entity("Could not find any top 100 lists.").header("Access-Control-Allow-Origin", "*").build();
+    	}        
+    }
+	
+	@GET
+    @Path("/top100/archived")
+    @Produces(MediaType.APPLICATION_JSON)
+    @Formatted
+    public Response getTop100ListsArchived() {
+		//TODO
+    	List<Top100List> top100list = HibernateUtil.getTop100ListsArchived();
+       	if(!top100list.isEmpty()){
+       		return Response.ok(top100list).header("Access-Control-Allow-Origin", "*").build();
+    	}else{
+    		return Response.status(Response.Status.NOT_FOUND).entity("Could not find any archived top 100 lists.").header("Access-Control-Allow-Origin", "*").build();
+    	}        
+    }
+	
 	@DELETE
 	@Path("/top100/delete/{id}")
 	@Consumes("application/json")
@@ -88,13 +149,22 @@ public class RestService {
 	@Formatted
     public Response deleteFromTop100(@PathParam("id") int id){
 		log.info("Delete from top 100 path param:"+ id);
-		
 		Top100 deleteMe = HibernateUtil.getTop100(id);
 		if(deleteMe == null){
 			return Response.status(Constants.HTTPCodes.BAD_REQUEST).entity("Could not delete top 100!").header("Access-Control-Allow-Origin", "*").build();
 		}
+		List<Top100> top100list = HibernateUtil.getAllTop100();
+		for(int i = deleteMe.getOrder(); i < top100list.size(); i++){
+	    	Top100 tmp = top100list.get(i);
+	    	tmp.setOrder(tmp.getOrder()-1);
+	    	top100list.set(i-1, tmp);
+	    }
+		top100list.remove(top100list.size()-1);
 		HibernateUtil.deleteVentureTop100(id);
-	    HibernateUtil.deleteTop100(deleteMe);
+		HibernateUtil.deleteTop100(deleteMe);
+	    for(Top100 list : top100list){
+	    	HibernateUtil.updateTop100(list);
+	    }
 		return Response.ok(deleteMe).header("Access-Control-Allow-Origin", "*").build();
 		
 	}
@@ -210,6 +280,65 @@ public class RestService {
 		venture.setTop100(top100);
 		HibernateUtil.updateVenture(venture);
 		return Response.ok(top100).header("Access-Control-Allow-Origin", "*").build();
+	}
+	
+	@POST
+    @Path("/top100/newlist")
+    @Consumes(MediaType.APPLICATION_JSON)
+    @Produces(MediaType.APPLICATION_JSON)
+    @Formatted
+    public Response newTop100List(String json) throws JsonGenerationException, JsonMappingException, IOException {
+		
+		log.info("JSON body:"+ json);
+		JSONObject body = new JSONObject(json);
+
+		//Check to see if part of top100 already
+		if(HibernateUtil.getTop100ListByName(body.getString("listName")) != null){
+			ObjectMapper mapper = new ObjectMapper();
+			return Response.status(Constants.HTTPCodes.BAD_REQUEST).entity(mapper.writeValueAsString("Top 100 list with id "+body.getString("listName")+" already exists!")).header("Access-Control-Allow-Origin", "*").build();
+		}
+		Top100List top100list = new Top100List();
+		top100list.setListName(body.getString("listName"));
+		top100list.setArchive(new Boolean(false));
+		top100list = HibernateUtil.addTop100List(top100list);
+
+		return Response.ok(top100list).header("Access-Control-Allow-Origin", "*").build();
+	}
+	
+	@POST
+    @Path("/top100/archivelist")
+    @Consumes(MediaType.APPLICATION_JSON)
+    @Produces(MediaType.APPLICATION_JSON)
+    @Formatted
+    public Response archiveTop100List(String json) throws JsonGenerationException, JsonMappingException, IOException {
+		
+		log.info("JSON body:"+ json);
+		JSONObject body = new JSONObject(json);
+
+		Top100List top100list = HibernateUtil.getTop100List(body.getInt("id"));
+
+		top100list.setArchive(new Boolean(true));
+		HibernateUtil.updateTop100List(top100list);
+
+		return Response.ok(top100list).header("Access-Control-Allow-Origin", "*").build();
+	}
+	
+	@POST
+    @Path("/top100/unarchivelist")
+    @Consumes(MediaType.APPLICATION_JSON)
+    @Produces(MediaType.APPLICATION_JSON)
+    @Formatted
+    public Response unarchiveTop100List(String json) throws JsonGenerationException, JsonMappingException, IOException {
+		
+		log.info("JSON body:"+ json);
+		JSONObject body = new JSONObject(json);
+
+		Top100List top100list = HibernateUtil.getTop100List(body.getInt("id"));
+
+		top100list.setArchive(new Boolean(false));
+		HibernateUtil.updateTop100List(top100list);
+
+		return Response.ok(top100list).header("Access-Control-Allow-Origin", "*").build();
 	}
 	
 	@POST
