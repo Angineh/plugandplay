@@ -487,6 +487,24 @@ public class HibernateUtil {
 	     }
 	}
 	
+	public static List<Top100> getAllTop100(String listName) {
+		 Session session = SessionFactoryUtil.getSessionFactory().getCurrentSession();
+	     try {
+	     session.getTransaction().begin();
+	     
+	     @SuppressWarnings("unchecked")
+		 List<Top100> top100 = session.createCriteria(Top100.class).add(Restrictions.eq("listName", listName)).addOrder(Order.asc("order")).list();
+	     session.getTransaction().commit();
+	     
+	     return top100;
+	      
+	     } catch (RuntimeException e) {
+	         session.getTransaction().rollback();
+	         log.fatal(e.getMessage(), e.fillInStackTrace());
+	         throw e;
+	     }
+	}
+	
 	public static List<Top100> getAllTop100() {
 		 Session session = SessionFactoryUtil.getSessionFactory().getCurrentSession();
 	     try {
@@ -576,15 +594,23 @@ public class HibernateUtil {
 	     }
 	}
 		
-	public static Top100 getTop100(int venture_id) {
+	public static Top100 getTop100(int venture_id, String listName) {
 			 Session session = SessionFactoryUtil.getSessionFactory().getCurrentSession();
 		     try {
 		     session.getTransaction().begin();
 		     
-		     Top100 top100 = (Top100) session.get(Top100.class, venture_id);
+		     @SuppressWarnings("unchecked")
+			List<Top100> top100list = (List<Top100>) session.createCriteria(Top100.class).add(Restrictions.eq("listName", listName)).add(Restrictions.eq("venture_id", venture_id)).list();
+		    		 //session.get(Top100.class, venture_id);
 		     session.getTransaction().commit();
-		     
-		     return top100;
+		     Top100 top100 = new Top100();
+		     if(!top100list.isEmpty()){
+		    	 top100 = (Top100) top100list.get(0);
+			     log.info("Found top100: "+top100.getVenture_id()+" "+top100.getListName());
+			     return top100; 
+		     }else{
+		    	 return null;
+		     }
 		      
 		     } catch (RuntimeException e) {
 		         session.getTransaction().rollback();

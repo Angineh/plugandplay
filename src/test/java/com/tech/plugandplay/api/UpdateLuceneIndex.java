@@ -8,7 +8,7 @@ import com.jayway.restassured.response.Response;
 
 public class UpdateLuceneIndex {
 	
-	static String hostname = "localhost";
+	static String hostname = "54.145.172.103";
 	
 	@Test
 	public static void updateLuceneIndex(){

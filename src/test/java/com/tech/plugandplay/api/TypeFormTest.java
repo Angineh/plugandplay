@@ -17,8 +17,11 @@ public class TypeFormTest {
 	@Test
 	public static void test() throws IOException {
 		String content = new String(Files.readAllBytes(Paths.get("src/main/resources/json/form-data.json")), StandardCharsets.UTF_8);
+		Response response = null;
+		for(int i = 0; i < 100; i ++){
+		response = RestAssured.given().contentType(ContentType.JSON).body(content).post("http://localhost:8080/plugandplay/api/v1/ventures/new");	
+		}
 		
-		Response response = RestAssured.given().contentType(ContentType.JSON).body(content).post("http://54.145.172.103:8080/plugandplay/api/v1/ventures/new");
 		
 		System.out.println(response.getStatusLine());
 		System.out.println(response.getBody().asString());

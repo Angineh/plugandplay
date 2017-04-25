@@ -16,10 +16,11 @@ public class AddTop100 {
 	
 	@Test
 	public static void test() throws IOException {
+		String name = "Travel";
 		
-		for(int i = 50; i < 57; i ++){
+		for(int i = 50; i < 60; i ++){
 			
-			String content = "{\"id\":"+i+"}";
+			String content = "{\"id\":"+i+",\"listName\":\""+name+"\"}";
 			Response response = RestAssured.given().contentType(ContentType.JSON).body(content).post("http://localhost:8080/plugandplay/api/v1/ventures/addtop100");
 			
 			System.out.println(response.getStatusLine());

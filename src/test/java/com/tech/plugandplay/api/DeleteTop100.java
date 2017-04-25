@@ -17,15 +17,15 @@ public class DeleteTop100 {
 	@Test
 	public static void test() throws IOException {
 		
-		//for(int i = 206; i < 207; i ++){
-			int id = 100;
-			//String content = "{\"id\":"+i+"}";
-			Response response = RestAssured.given().contentType(ContentType.JSON).delete("http://localhost:8080/plugandplay/api/v1/top100/delete/"+id);
+		for(int i = 50; i < 51; i ++){
+			//int id = 100;
+			String content = "{\"id\":"+i+"}";
+			Response response = RestAssured.given().contentType(ContentType.JSON).delete("http://localhost:8080/plugandplay/api/v1/top100/delete/"+i);
 			
 			System.out.println(response.getStatusLine());
 			System.out.println(response.getBody().asString());
 			
-		//}
+		}
 		
 	}
 	

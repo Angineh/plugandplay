@@ -1,6 +1,7 @@
 package com.tech.plugandplay.model;
 
 import java.io.Serializable;
+import java.util.List;
 
 import javax.persistence.CascadeType;
 import javax.persistence.Column;
@@ -9,6 +10,7 @@ import javax.persistence.FetchType;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
 import javax.persistence.JoinColumn;
+import javax.persistence.OneToMany;
 import javax.persistence.OneToOne;
 import javax.persistence.Table;
 
@@ -105,10 +107,10 @@ public class Ventures implements Serializable {
 	@Column(name="PORTFOLIO")
 	private boolean portfolio;
 	@IndexedEmbedded
-	@OneToOne(fetch=FetchType.EAGER, cascade=CascadeType.ALL, orphanRemoval=true)
-    @JoinColumn(name="venture_id")
+	@OneToMany(fetch=FetchType.EAGER, cascade=CascadeType.ALL, orphanRemoval=true)
+    @JoinColumn(name="listName")
     @ForeignKey(name = "top100")
-	private Top100 top100;
+	private List<Top100> top100;
 	
 	public int getId() {
 		return id;
@@ -272,11 +274,22 @@ public class Ventures implements Serializable {
 	public void setPortfolio(boolean portfolio) {
 		this.portfolio = portfolio;
 	}
-	public Top100 getTop100() {
+	public List<Top100> getTop100() {
 		return top100;
 	}
-	public void setTop100(Top100 top100) {
+	public void setTop100(List<Top100> top100) {
 		this.top100 = top100;
+	}
+	public void addTop100(Top100 addme){
+		top100.add(addme);
+	}
+	public void removeTop100(Top100 removeme){
+		for(Top100 list: top100){
+			if(list.getListName().equalsIgnoreCase(removeme.getListName())){
+				top100.remove(list);
+				return;
+			}
+		}
 	}
 	
 	

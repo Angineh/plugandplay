@@ -147,9 +147,9 @@ public class RestService {
 	@Consumes("application/json")
 	@Produces("application/json")
 	@Formatted
-    public Response deleteFromTop100(@PathParam("id") int id){
+    public Response deleteFromTop100(@PathParam("id") int id, @QueryParam("listName") String listName){
 		log.info("Delete from top 100 path param:"+ id);
-		Top100 deleteMe = HibernateUtil.getTop100(id);
+		Top100 deleteMe = HibernateUtil.getTop100(id, listName);
 		if(deleteMe == null){
 			return Response.status(Constants.HTTPCodes.BAD_REQUEST).entity("Could not delete top 100!").header("Access-Control-Allow-Origin", "*").build();
 		}
@@ -179,7 +179,7 @@ public class RestService {
 		log.info("JSON body:"+ json);
 		JSONObject body = new JSONObject(json);
 		
-		Top100 current = HibernateUtil.getTop100(body.getInt("id"));
+		Top100 current = HibernateUtil.getTop100(body.getInt("id"), body.getString("listName"));
 		int order = body.getInt("order");
 		List<Top100> top100list = HibernateUtil.getAllTop100();
 		if(order < 1 || order > 100 || order == current.getOrder() || order > top100list.size()){
@@ -262,22 +262,23 @@ public class RestService {
 		
 		log.info("JSON body:"+ json);
 		JSONObject body = new JSONObject(json);
-		List<Top100> top100list = HibernateUtil.getAllTop100();
+		List<Top100> top100list = HibernateUtil.getAllTop100(body.getString("listName"));
 		ObjectMapper mapper = new ObjectMapper();
 		if(top100list.size()==100){
 			String jsonInString = mapper.writeValueAsString(Constants.GenericErrorMessages.EXCEEDED_SIZE);
 			return Response.status(Constants.HTTPCodes.BAD_REQUEST).entity(jsonInString).header("Access-Control-Allow-Origin", "*").build();
 		}
 		//Check to see if part of top100 already
-		if(HibernateUtil.getTop100(body.getInt("id")) != null){
-			return Response.status(Constants.HTTPCodes.BAD_REQUEST).entity(mapper.writeValueAsString("Top 100 venture with id "+body.getInt("id")+" already exists!")).header("Access-Control-Allow-Origin", "*").build();
+		if(HibernateUtil.getTop100(body.getInt("id"), body.getString("listName")) != null){
+			return Response.status(Constants.HTTPCodes.BAD_REQUEST).entity(mapper.writeValueAsString("Top 100 venture with id "+body.getInt("id")+" already exists in list "+body.getString("listName")+"!")).header("Access-Control-Allow-Origin", "*").build();
 		}
 		Top100 top100 = new Top100();
 		top100.setOrder(top100list.size()+1);
 		top100.setVenture_id(body.getInt("id"));
+		top100.setListName(body.getString("listName"));
 		HibernateUtil.addTop100(top100);
 		Ventures venture = HibernateUtil.getVenture(body.getInt("id"));
-		venture.setTop100(top100);
+		venture.addTop100(top100);
 		HibernateUtil.updateVenture(venture);
 		return Response.ok(top100).header("Access-Control-Allow-Origin", "*").build();
 	}

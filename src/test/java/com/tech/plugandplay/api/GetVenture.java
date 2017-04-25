@@ -9,19 +9,19 @@ import com.jayway.restassured.RestAssured;
 import com.jayway.restassured.response.Response;
 import com.tech.plugandplay.util.CommonUtil;
 
-public class GetCompany {
+public class GetVenture {
 	
-	static String id;
-	static String hostname;
+	static String id = "40";
+	static String hostname = "localhost";
 	
-	@BeforeClass
+/*	@BeforeClass
 	@Parameters({"id","hostname"})
 	public static void setup(String companyId, String host)
 	{
 		id = CommonUtil.assignSysProp("ID", companyId);
 		hostname = CommonUtil.assignSysProp("SERVER", host);
 		
-	}
+	}*/
 		
 	@Test
 	public static void getCompany(){
