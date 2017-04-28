@@ -1,6 +1,7 @@
 package com.tech.plugandplay.model;
 
 import java.io.Serializable;
+import java.util.Date;
 import java.util.List;
 
 import javax.persistence.CascadeType;
@@ -13,6 +14,8 @@ import javax.persistence.JoinColumn;
 import javax.persistence.OneToMany;
 import javax.persistence.OneToOne;
 import javax.persistence.Table;
+import javax.persistence.Temporal;
+import javax.persistence.TemporalType;
 
 import org.hibernate.annotations.ForeignKey;
 import org.hibernate.search.annotations.Analyze;
@@ -21,6 +24,7 @@ import org.hibernate.search.annotations.Index;
 import org.hibernate.search.annotations.Indexed;
 import org.hibernate.search.annotations.IndexedEmbedded;
 import org.hibernate.search.annotations.Store;
+import org.ocpsoft.pretty.time.PrettyTime;
 
 @SuppressWarnings("serial")
 @Entity
@@ -106,6 +110,9 @@ public class Ventures implements Serializable {
 	private String dataOfInvestment;
 	@Column(name="PORTFOLIO")
 	private boolean portfolio;
+	@Column(name="UPDATED")
+	@Temporal(TemporalType.TIMESTAMP) /* Tells Hibernate its of time / date format */
+	private Date updated;
 	@IndexedEmbedded
 	@OneToMany(fetch=FetchType.EAGER, cascade=CascadeType.ALL, orphanRemoval=true)
     @JoinColumn(name="listName")
@@ -274,6 +281,14 @@ public class Ventures implements Serializable {
 	public void setPortfolio(boolean portfolio) {
 		this.portfolio = portfolio;
 	}
+	public String getUpdated(){
+        PrettyTime t = new PrettyTime();
+        String timestamp = t.format(updated);
+        return timestamp;
+    }
+	public void setUpdated(Date updated){
+        this.updated = updated;
+    }
 	public List<Top100> getTop100() {
 		return top100;
 	}

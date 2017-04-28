@@ -11,7 +11,7 @@ import com.tech.plugandplay.util.CommonUtil;
 
 public class GetVenture {
 	
-	static String id = "40";
+	static String id = "50";
 	static String hostname = "localhost";
 	
 /*	@BeforeClass

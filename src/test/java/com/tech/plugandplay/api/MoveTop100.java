@@ -16,15 +16,14 @@ public class MoveTop100 {
 	
 	@Test
 	public static void test() throws IOException {
-		
+			String name = "Travel";
 	
-			String content = "{\"id\":100,\"order\":5}";
+			String content = "{\"id\":55,\"order\":8,\"listName\":\""+name+"\"}";
 			Response response = RestAssured.given().contentType(ContentType.JSON).body(content).post("http://localhost:8080/plugandplay/api/v1/top100/move");
 			
 			System.out.println(response.getStatusLine());
 			System.out.println(response.getBody().asString());
-			
-		
+				
 	}
 	
 }
