@@ -25,5 +25,7 @@
   <mapping class="com.tech.plugandplay.model.Ventures"/>
   <mapping class="com.tech.plugandplay.model.Top100"/>
   <mapping class="com.tech.plugandplay.model.Top100List"/>
+  <mapping class="com.tech.plugandplay.model.Top20"/>
+  <mapping class="com.tech.plugandplay.model.Top20List"/>
 </session-factory>
 </hibernate-configuration>

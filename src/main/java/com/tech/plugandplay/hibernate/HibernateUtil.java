@@ -20,6 +20,8 @@ import com.tech.plugandplay.model.Cluster;
 import com.tech.plugandplay.model.Nodes;
 import com.tech.plugandplay.model.Top100;
 import com.tech.plugandplay.model.Top100List;
+import com.tech.plugandplay.model.Top20;
+import com.tech.plugandplay.model.Top20List;
 import com.tech.plugandplay.model.Ventures;
 
 public class HibernateUtil {
@@ -140,6 +142,22 @@ public class HibernateUtil {
 		}
 	}
 	
+	public static Top20 addTop20(Top20 top20) {
+		
+		Session session = SessionFactoryUtil.getSessionFactory().getCurrentSession();
+		try {
+			session.getTransaction().begin();
+			session.save(top20);
+			session.getTransaction().commit();
+			return top20;
+		  
+		} catch (RuntimeException e) {
+		     session.getTransaction().rollback();
+		     log.fatal(e.getMessage(), e.fillInStackTrace());
+		     throw e;
+		}
+	}
+	
 	public static Top100List addTop100List(Top100List top100list) {
 		
 		Session session = SessionFactoryUtil.getSessionFactory().getCurrentSession();
@@ -148,6 +166,22 @@ public class HibernateUtil {
 			session.save(top100list);
 			session.getTransaction().commit();
 			return top100list;
+		  
+		} catch (RuntimeException e) {
+		     session.getTransaction().rollback();
+		     log.fatal(e.getMessage(), e.fillInStackTrace());
+		     throw e;
+		}
+	}
+	
+	public static Top20List addTop20List(Top20List top20list) {
+		
+		Session session = SessionFactoryUtil.getSessionFactory().getCurrentSession();
+		try {
+			session.getTransaction().begin();
+			session.save(top20list);
+			session.getTransaction().commit();
+			return top20list;
 		  
 		} catch (RuntimeException e) {
 		     session.getTransaction().rollback();
@@ -233,6 +267,21 @@ public class HibernateUtil {
 		}
 	}
 	
+	public static Top20 updateTop20(Top20 top20) {
+		Session session = SessionFactoryUtil.getSessionFactory().getCurrentSession();
+		try {
+			session.getTransaction().begin();
+			session.update(top20);
+			session.getTransaction().commit();
+			return top20;
+		  
+		} catch (RuntimeException e) {
+		     session.getTransaction().rollback();
+		     log.fatal(e.getMessage(), e.fillInStackTrace());
+		     throw e;
+		}
+	}
+	
 	public static Top100List updateTop100List(Top100List top100list) {
 		Session session = SessionFactoryUtil.getSessionFactory().getCurrentSession();
 		try {
@@ -240,6 +289,21 @@ public class HibernateUtil {
 			session.update(top100list);
 			session.getTransaction().commit();
 			return top100list;
+		  
+		} catch (RuntimeException e) {
+		     session.getTransaction().rollback();
+		     log.fatal(e.getMessage(), e.fillInStackTrace());
+		     throw e;
+		}
+	}
+	
+	public static Top20List updateTop20List(Top20List top20list) {
+		Session session = SessionFactoryUtil.getSessionFactory().getCurrentSession();
+		try {
+			session.getTransaction().begin();
+			session.update(top20list);
+			session.getTransaction().commit();
+			return top20list;
 		  
 		} catch (RuntimeException e) {
 		     session.getTransaction().rollback();
@@ -305,7 +369,36 @@ public class HibernateUtil {
 		}
 	}
 	
+	public static void deleteTop20(Top20 top20) {
+		Session session = SessionFactoryUtil.getSessionFactory().getCurrentSession();
+		try {
+			session.getTransaction().begin();		
+			session.delete(top20);
+			session.getTransaction().commit();
+		  
+		} catch (RuntimeException e) {
+		     session.getTransaction().rollback();
+		     log.fatal(e.getMessage(), e.fillInStackTrace());
+		     throw e;
+		}
+	}
+	
 	public static void deleteVentureTop100(int id) {
+		Session session = SessionFactoryUtil.getSessionFactory().getCurrentSession();
+		try {
+			session.getTransaction().begin();
+			SQLQuery sqlQuery = session.createSQLQuery("update ventures set venture_id=NULL where id = "+id);
+			sqlQuery.executeUpdate();
+			session.getTransaction().commit();
+		  
+		} catch (RuntimeException e) {
+		     session.getTransaction().rollback();
+		     log.fatal(e.getMessage(), e.fillInStackTrace());
+		     throw e;
+		}
+	}
+	
+	public static void deleteVentureTop20(int id) {
 		Session session = SessionFactoryUtil.getSessionFactory().getCurrentSession();
 		try {
 			session.getTransaction().begin();
@@ -487,6 +580,25 @@ public class HibernateUtil {
 	     }
 	}
 	
+	public static List<Ventures> getVentureTop20(String ids) {
+		 Session session = SessionFactoryUtil.getSessionFactory().getCurrentSession();
+	     try {
+	     session.getTransaction().begin();
+	     //log.info("Ids:"+ids);
+	     @SuppressWarnings("unchecked")
+	     //List<Ventures> ventures = session.createCriteria(Ventures.class).add(Restrictions.in("id", ids)).list();
+		 List<Ventures> ventures = session.createQuery("from Ventures where id in ("+ids+") ORDER BY FIELD(id,"+ids+")").list();
+	     session.getTransaction().commit();
+	     
+	     return ventures;
+	      
+	     } catch (RuntimeException e) {
+	         session.getTransaction().rollback();
+	         log.fatal(e.getMessage(), e.fillInStackTrace());
+	         throw e;
+	     }
+	}
+	
 	public static List<Top100> getAllTop100(String listName) {
 		 Session session = SessionFactoryUtil.getSessionFactory().getCurrentSession();
 	     try {
@@ -497,6 +609,24 @@ public class HibernateUtil {
 	     session.getTransaction().commit();
 	     
 	     return top100;
+	      
+	     } catch (RuntimeException e) {
+	         session.getTransaction().rollback();
+	         log.fatal(e.getMessage(), e.fillInStackTrace());
+	         throw e;
+	     }
+	}
+	
+	public static List<Top20> getAllTop20(String listName) {
+		 Session session = SessionFactoryUtil.getSessionFactory().getCurrentSession();
+	     try {
+	     session.getTransaction().begin();
+	     
+	     @SuppressWarnings("unchecked")
+		 List<Top20> top20 = session.createCriteria(Top20.class).add(Restrictions.eq("listNameTop20", listName)).addOrder(Order.asc("order")).list();
+	     session.getTransaction().commit();
+	     
+	     return top20;
 	      
 	     } catch (RuntimeException e) {
 	         session.getTransaction().rollback();
@@ -523,6 +653,24 @@ public class HibernateUtil {
 	     }
 	}
 	
+	public static List<Top20> getAllTop20() {
+		 Session session = SessionFactoryUtil.getSessionFactory().getCurrentSession();
+	     try {
+	     session.getTransaction().begin();
+	     
+	     @SuppressWarnings("unchecked")
+		 List<Top20> top20 = session.createCriteria(Top20.class).addOrder(Order.asc("order")).list();
+	     session.getTransaction().commit();
+	     
+	     return top20;
+	      
+	     } catch (RuntimeException e) {
+	         session.getTransaction().rollback();
+	         log.fatal(e.getMessage(), e.fillInStackTrace());
+	         throw e;
+	     }
+	}
+	
 	public static List<Top100List> getTop100Lists() {
 		 Session session = SessionFactoryUtil.getSessionFactory().getCurrentSession();
 	     try {
@@ -541,6 +689,24 @@ public class HibernateUtil {
 	     }
 	}
 	
+	public static List<Top20List> getTop20Lists() {
+		 Session session = SessionFactoryUtil.getSessionFactory().getCurrentSession();
+	     try {
+	     session.getTransaction().begin();
+	     
+	     @SuppressWarnings("unchecked")
+		 List<Top20List> top20list = session.createCriteria(Top20List.class).add(Restrictions.eq("archive", new Boolean(false))).list();
+	     session.getTransaction().commit();
+	     
+	     return top20list;
+	      
+	     } catch (RuntimeException e) {
+	         session.getTransaction().rollback();
+	         log.fatal(e.getMessage(), e.fillInStackTrace());
+	         throw e;
+	     }
+	}
+	
 	public static List<Top100List> getTop100ListsArchived() {
 		 Session session = SessionFactoryUtil.getSessionFactory().getCurrentSession();
 	     try {
@@ -551,6 +717,24 @@ public class HibernateUtil {
 	     session.getTransaction().commit();
 	     
 	     return top100list;
+	      
+	     } catch (RuntimeException e) {
+	         session.getTransaction().rollback();
+	         log.fatal(e.getMessage(), e.fillInStackTrace());
+	         throw e;
+	     }
+	}
+	
+	public static List<Top20List> getTop20ListsArchived() {
+		 Session session = SessionFactoryUtil.getSessionFactory().getCurrentSession();
+	     try {
+	     session.getTransaction().begin();
+	     
+	     @SuppressWarnings("unchecked")
+		 List<Top20List> top20list = session.createCriteria(Top20List.class).add(Restrictions.eq("archive", new Boolean(true))).list();
+	     session.getTransaction().commit();
+	     
+	     return top20list;
 	      
 	     } catch (RuntimeException e) {
 	         session.getTransaction().rollback();
@@ -606,7 +790,7 @@ public class HibernateUtil {
 		     Top100 top100 = new Top100();
 		     if(!top100list.isEmpty()){
 		    	 top100 = (Top100) top100list.get(0);
-			     log.info("Found top100: "+top100.getVenture_id()+" "+top100.getListName());
+			     //log.info("Found top100: "+top100.getVenture_id()+" "+top100.getListName());
 			     return top100; 
 		     }else{
 		    	 return null;
@@ -619,6 +803,32 @@ public class HibernateUtil {
 		         //throw e;
 		     }
 	}
+	
+	public static Top20 getTop20(int venture_id, String listName) {
+		 Session session = SessionFactoryUtil.getSessionFactory().getCurrentSession();
+	     try {
+	     session.getTransaction().begin();
+	     
+	     @SuppressWarnings("unchecked")
+		List<Top20> top20list = (List<Top20>) session.createCriteria(Top20.class).add(Restrictions.eq("listNameTop20", listName)).add(Restrictions.eq("venture_id", venture_id)).list();
+	    		 //session.get(Top100.class, venture_id);
+	     session.getTransaction().commit();
+	     Top20 top20 = new Top20();
+	     if(!top20list.isEmpty()){
+	    	 top20 = (Top20) top20list.get(0);
+		     //log.info("Found top20: "+top20.getVenture_id()+" "+top20.getListName());
+		     return top20; 
+	     }else{
+	    	 return null;
+	     }
+	      
+	     } catch (RuntimeException e) {
+	         session.getTransaction().rollback();
+	         log.fatal(e.getMessage(), e.fillInStackTrace());
+	         return null;
+	         //throw e;
+	     }
+}
 	
 	public static Top100List getTop100List(int id) {
 		 Session session = SessionFactoryUtil.getSessionFactory().getCurrentSession();
@@ -638,6 +848,24 @@ public class HibernateUtil {
 	     }
 	}
 	
+	public static Top20List getTop20List(int id) {
+		 Session session = SessionFactoryUtil.getSessionFactory().getCurrentSession();
+	     try {
+	     session.getTransaction().begin();
+	     
+	     Top20List top20list = (Top20List) session.get(Top20List.class, id);
+	     session.getTransaction().commit();
+	     
+	     return top20list;
+	      
+	     } catch (RuntimeException e) {
+	         session.getTransaction().rollback();
+	         log.fatal(e.getMessage(), e.fillInStackTrace());
+	         return null;
+	         //throw e;
+	     }
+	}
+	
 	public static Top100List getTop100ListByName(String listName) {
 		 Session session = SessionFactoryUtil.getSessionFactory().getCurrentSession();
 	     try {
@@ -648,8 +876,33 @@ public class HibernateUtil {
 	     Top100List top100list = new Top100List();
 	     if(!tmp.isEmpty()){
 	    	 top100list = (Top100List) tmp.get(0);
-		     log.info("Found list: "+top100list.getListName());
+		     //log.info("Found list: "+top100list.getListName());
 		     return top100list; 
+	     }else{
+	    	 return null;
+	     }
+	     
+	      
+	     } catch (RuntimeException e) {
+	         session.getTransaction().rollback();
+	         log.fatal(e.getMessage(), e.fillInStackTrace());
+	         return null;
+	         //throw e;
+	     }
+	}
+	
+	public static Top20List getTop20ListByName(String listName) {
+		 Session session = SessionFactoryUtil.getSessionFactory().getCurrentSession();
+	     try {
+	     session.getTransaction().begin();
+	     @SuppressWarnings("rawtypes")
+		 List tmp = session.createCriteria(Top20List.class).add(Restrictions.eq("listNameTop20", listName)).list();
+	     session.getTransaction().commit();
+	     Top20List top20list = new Top20List();
+	     if(!tmp.isEmpty()){
+	    	 top20list = (Top20List) tmp.get(0);
+		     //log.info("Found list: "+top20list.getListName());
+		     return top20list; 
 	     }else{
 	    	 return null;
 	     }

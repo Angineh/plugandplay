@@ -18,6 +18,8 @@ import javax.persistence.Temporal;
 import javax.persistence.TemporalType;
 
 import org.hibernate.annotations.ForeignKey;
+import org.hibernate.annotations.LazyCollection;
+import org.hibernate.annotations.LazyCollectionOption;
 import org.hibernate.search.annotations.Analyze;
 import org.hibernate.search.annotations.Field;
 import org.hibernate.search.annotations.Index;
@@ -114,10 +116,17 @@ public class Ventures implements Serializable {
 	@Temporal(TemporalType.TIMESTAMP) /* Tells Hibernate its of time / date format */
 	private Date updated;
 	@IndexedEmbedded
-	@OneToMany(fetch=FetchType.EAGER, cascade=CascadeType.ALL, orphanRemoval=true)
+	@LazyCollection(LazyCollectionOption.FALSE)
+	@OneToMany(cascade=CascadeType.ALL, orphanRemoval=true)
     @JoinColumn(name="listName")
     @ForeignKey(name = "top100")
 	private List<Top100> top100;
+	@IndexedEmbedded
+	@LazyCollection(LazyCollectionOption.FALSE)
+	@OneToMany(cascade=CascadeType.ALL, orphanRemoval=true)
+    @JoinColumn(name="listNameTop20")
+    @ForeignKey(name = "top20")
+	private List<Top20> top20;
 	
 	public int getId() {
 		return id;
@@ -307,6 +316,22 @@ public class Ventures implements Serializable {
 		}
 	}
 	
-	
+	public List<Top20> getTop20() {
+		return top20;
+	}
+	public void setTop20(List<Top20> top20) {
+		this.top20 = top20;
+	}
+	public void addTop20(Top20 addme){
+		top20.add(addme);
+	}
+	public void removeTop20(Top20 removeme){
+		for(Top20 list: top20){
+			if(list.getListName().equalsIgnoreCase(removeme.getListName())){
+				top20.remove(list);
+				return;
+			}
+		}
+	}
 	
 }

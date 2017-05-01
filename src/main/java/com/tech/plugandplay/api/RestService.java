@@ -33,16 +33,13 @@ import org.jboss.resteasy.annotations.providers.jackson.Formatted;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
-import com.ibm.bicloud.fyre.RequestGenerator;
 import com.tech.plugandplay.hibernate.HibernateUtil;
 import com.tech.plugandplay.model.Business;
-import com.tech.plugandplay.model.Cluster;
-import com.tech.plugandplay.model.Initialize;
-import com.tech.plugandplay.model.Nodes;
 import com.tech.plugandplay.model.Top100;
 import com.tech.plugandplay.model.Top100List;
+import com.tech.plugandplay.model.Top20;
+import com.tech.plugandplay.model.Top20List;
 import com.tech.plugandplay.model.Ventures;
-import com.tech.plugandplay.util.AsyncRequest;
 import com.tech.plugandplay.util.Constants;
 
 @Path("/v1")
@@ -117,11 +114,31 @@ public class RestService {
     }
 	
 	@GET
+    @Path("/top20/all")
+    @Produces(MediaType.APPLICATION_JSON)
+    @Formatted
+    public Response getTop20(@QueryParam("listName") String listName) {
+		
+    	List<Top20> top20 = HibernateUtil.getAllTop20(listName);
+       	if(!top20.isEmpty()){
+       		StringBuilder ids = new StringBuilder();
+       		for(Top20 venture: top20){
+       			ids.append(venture.getVenture_id());
+       			ids.append(",");
+       		} 		
+       		List<Ventures> ventures = HibernateUtil.getVentureTop20(ids.toString().substring(0, ids.toString().length()-1));
+       		return Response.ok(ventures).header("Access-Control-Allow-Origin", "*").build();
+    	}else{
+    		return Response.status(Response.Status.NO_CONTENT).entity("Could not find any top 20.").header("Access-Control-Allow-Origin", "*").build();
+    	}        
+    }
+	
+	@GET
     @Path("/top100/lists")
     @Produces(MediaType.APPLICATION_JSON)
     @Formatted
     public Response getTop100Lists() {
-		//TODO
+	
     	List<Top100List> top100list = HibernateUtil.getTop100Lists();
        	if(!top100list.isEmpty()){
        		return Response.ok(top100list).header("Access-Control-Allow-Origin", "*").build();
@@ -131,16 +148,44 @@ public class RestService {
     }
 	
 	@GET
+    @Path("/top20/lists")
+    @Produces(MediaType.APPLICATION_JSON)
+    @Formatted
+    public Response getTop20Lists() {
+
+    	List<Top20List> top20list = HibernateUtil.getTop20Lists();
+       	if(!top20list.isEmpty()){
+       		return Response.ok(top20list).header("Access-Control-Allow-Origin", "*").build();
+    	}else{
+    		return Response.status(Response.Status.NO_CONTENT).entity("Could not find any top 20 lists.").header("Access-Control-Allow-Origin", "*").build();
+    	}        
+    }
+	
+	@GET
     @Path("/top100/archived")
     @Produces(MediaType.APPLICATION_JSON)
     @Formatted
     public Response getTop100ListsArchived() {
-		//TODO
+
     	List<Top100List> top100list = HibernateUtil.getTop100ListsArchived();
        	if(!top100list.isEmpty()){
        		return Response.ok(top100list).header("Access-Control-Allow-Origin", "*").build();
     	}else{
     		return Response.status(Response.Status.NO_CONTENT).entity("Could not find any archived top 100 lists.").header("Access-Control-Allow-Origin", "*").build();
+    	}        
+    }
+	
+	@GET
+    @Path("/top20/archived")
+    @Produces(MediaType.APPLICATION_JSON)
+    @Formatted
+    public Response getTop20ListsArchived() {
+
+    	List<Top20List> top20list = HibernateUtil.getTop20ListsArchived();
+       	if(!top20list.isEmpty()){
+       		return Response.ok(top20list).header("Access-Control-Allow-Origin", "*").build();
+    	}else{
+    		return Response.status(Response.Status.NO_CONTENT).entity("Could not find any archived top 20 lists.").header("Access-Control-Allow-Origin", "*").build();
     	}        
     }
 	
@@ -150,7 +195,7 @@ public class RestService {
 	@Produces("application/json")
 	@Formatted
     public Response deleteFromTop100(@PathParam("id") int id, @QueryParam("listName") String listName){
-		log.info("Delete from top 100 path param:"+ id);
+		//log.info("Delete from top 100 path param:"+ id);
 		Top100 deleteMe = HibernateUtil.getTop100(id, listName);
 		if(deleteMe == null){
 			return Response.status(Constants.HTTPCodes.BAD_REQUEST).entity("Could not delete top 100!").header("Access-Control-Allow-Origin", "*").build();
@@ -165,10 +210,36 @@ public class RestService {
 		Ventures venture = HibernateUtil.getVenture(id);
 		venture.removeTop100(deleteMe);
 		HibernateUtil.updateVenture(venture);
-		//HibernateUtil.deleteVentureTop100(id);
-		//HibernateUtil.deleteTop100(deleteMe);
 	    for(Top100 list : top100list){
 	    	HibernateUtil.updateTop100(list);
+	    }
+		return Response.ok(deleteMe).header("Access-Control-Allow-Origin", "*").build();
+		
+	}
+
+	@DELETE
+	@Path("/top100/delete/{id}")
+	@Consumes("application/json")
+	@Produces("application/json")
+	@Formatted
+    public Response deleteFromTop20(@PathParam("id") int id, @QueryParam("listName") String listName){
+		//log.info("Delete from top 20 path param:"+ id);
+		Top20 deleteMe = HibernateUtil.getTop20(id, listName);
+		if(deleteMe == null){
+			return Response.status(Constants.HTTPCodes.BAD_REQUEST).entity("Could not delete top 20!").header("Access-Control-Allow-Origin", "*").build();
+		}
+		List<Top20> top20list = HibernateUtil.getAllTop20(listName);
+		for(int i = deleteMe.getOrder(); i < top20list.size(); i++){
+	    	Top20 tmp = top20list.get(i);
+	    	tmp.setOrder(tmp.getOrder()-1);
+	    	top20list.set(i-1, tmp);
+	    }
+		top20list.remove(top20list.size()-1);
+		Ventures venture = HibernateUtil.getVenture(id);
+		venture.removeTop20(deleteMe);
+		HibernateUtil.updateVenture(venture);
+	    for(Top20 list : top20list){
+	    	HibernateUtil.updateTop20(list);
 	    }
 		return Response.ok(deleteMe).header("Access-Control-Allow-Origin", "*").build();
 		
@@ -181,7 +252,7 @@ public class RestService {
     @Formatted
     public Response moveTop100(String json) throws JsonGenerationException, JsonMappingException, IOException {
 		
-		log.info("JSON body:"+ json);
+		//log.info("JSON body:"+ json);
 		JSONObject body = new JSONObject(json);
 		
 		Top100 current = HibernateUtil.getTop100(body.getInt("id"), body.getString("listName"));
@@ -190,7 +261,7 @@ public class RestService {
 		if(order < 1 || order > 100 || order == current.getOrder() || order > top100list.size()){
 			ObjectMapper mapper = new ObjectMapper();
 			String jsonInString = mapper.writeValueAsString("The order value "+order+" is not valid! Please try again.");
-			log.info(jsonInString);
+			//log.info(jsonInString);
 			return Response.status(Constants.HTTPCodes.BAD_REQUEST).entity(jsonInString).header("Access-Control-Allow-Origin", "*").build();	
 		}
 		
@@ -209,6 +280,46 @@ public class RestService {
 	    top100list.add(order-1, current);
 	    for(Top100 list : top100list){
 	    	HibernateUtil.updateTop100(list);
+	    }
+		
+		return Response.ok(current).header("Access-Control-Allow-Origin", "*").build();
+	}
+	
+	@POST
+    @Path("/top20/move")
+    @Consumes(MediaType.APPLICATION_JSON)
+    @Produces(MediaType.APPLICATION_JSON)
+    @Formatted
+    public Response moveTop20(String json) throws JsonGenerationException, JsonMappingException, IOException {
+		
+		//log.info("JSON body:"+ json);
+		JSONObject body = new JSONObject(json);
+		
+		Top20 current = HibernateUtil.getTop20(body.getInt("id"), body.getString("listName"));
+		int order = body.getInt("order");
+		List<Top20> top20list = HibernateUtil.getAllTop20(body.getString("listName"));
+		if(order < 1 || order > 100 || order == current.getOrder() || order > top20list.size()){
+			ObjectMapper mapper = new ObjectMapper();
+			String jsonInString = mapper.writeValueAsString("The order value "+order+" is not valid! Please try again.");
+			//log.info(jsonInString);
+			return Response.status(Constants.HTTPCodes.BAD_REQUEST).entity(jsonInString).header("Access-Control-Allow-Origin", "*").build();	
+		}
+		
+	    for(int i = current.getOrder(); i < top20list.size(); i++){
+	    	Top20 tmp = top20list.get(i);
+	    	tmp.setOrder(tmp.getOrder()-1);
+	    	top20list.set(i-1, tmp);
+	    }
+	    top20list.remove(top20list.size()-1);
+	    for(int i = order - 1 ; i < top20list.size(); i++){
+	    	Top20 tmp = top20list.get(i);
+	    	tmp.setOrder(tmp.getOrder()+1);
+	    	top20list.set(i, tmp);
+	    } 
+	    current.setOrder(order);
+	    top20list.add(order-1, current);
+	    for(Top20 list : top20list){
+	    	HibernateUtil.updateTop20(list);
 	    }
 		
 		return Response.ok(current).header("Access-Control-Allow-Origin", "*").build();
@@ -273,13 +384,41 @@ public class RestService {
 	}
 	
 	@POST
+    @Path("/ventures/addtop20")
+    @Consumes(MediaType.APPLICATION_JSON)
+    @Produces(MediaType.APPLICATION_JSON)
+    @Formatted
+    public Response addTop20(String json) throws JsonGenerationException, JsonMappingException, IOException {
+		
+		//log.info("JSON body:"+ json);
+		JSONObject body = new JSONObject(json);
+		List<Top20> top20list = HibernateUtil.getAllTop20(body.getString("listName"));
+		if(top20list.size()==20){
+			return Response.status(Status.PARTIAL_CONTENT).entity(Constants.GenericErrorMessages.EXCEEDED_SIZE).header("Access-Control-Allow-Origin", "*").build();
+		}
+		//Check to see if part of top100 already
+		if(HibernateUtil.getTop20(body.getInt("id"), body.getString("listName")) != null){
+			return Response.status(Status.NO_CONTENT).entity("Top 20 venture with id "+body.getInt("id")+" already exists in list "+body.getString("listName")+"!").header("Access-Control-Allow-Origin", "*").build();
+		}
+		Top20 top20 = new Top20();
+		top20.setOrder(top20list.size()+1);
+		top20.setVenture_id(body.getInt("id"));
+		top20.setListName(body.getString("listName"));
+		HibernateUtil.addTop20(top20);
+		Ventures venture = HibernateUtil.getVenture(body.getInt("id"));
+		venture.addTop20(top20);
+		HibernateUtil.updateVenture(venture);
+		return Response.ok(top20).header("Access-Control-Allow-Origin", "*").build();
+	}
+	
+	@POST
     @Path("/top100/newlist")
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
     @Formatted
     public Response newTop100List(String json) throws JsonGenerationException, JsonMappingException, IOException {
 		
-		log.info("JSON body:"+ json);
+		//log.info("JSON body:"+ json);
 		JSONObject body = new JSONObject(json);
 
 		//Check to see if part of top100 already
@@ -297,13 +436,37 @@ public class RestService {
 	}
 	
 	@POST
+    @Path("/top20/newlist")
+    @Consumes(MediaType.APPLICATION_JSON)
+    @Produces(MediaType.APPLICATION_JSON)
+    @Formatted
+    public Response newTop20List(String json) throws JsonGenerationException, JsonMappingException, IOException {
+		
+		//log.info("JSON body:"+ json);
+		JSONObject body = new JSONObject(json);
+
+		//Check to see if part of top20 already
+		if(HibernateUtil.getTop20ListByName(body.getString("listName")) != null){
+			ObjectMapper mapper = new ObjectMapper();
+			return Response.status(Constants.HTTPCodes.BAD_REQUEST).entity(mapper.writeValueAsString("Top 20 list with id "+body.getString("listName")+" already exists!")).header("Access-Control-Allow-Origin", "*").build();
+		}
+		Top20List top20list = new Top20List();
+		top20list.setListName(body.getString("listName"));
+		top20list.setArchive(new Boolean(false));
+		top20list.setTime(new Date());
+		top20list = HibernateUtil.addTop20List(top20list);
+
+		return Response.ok(top20list).header("Access-Control-Allow-Origin", "*").build();
+	}
+	
+	@POST
     @Path("/top100/archivelist")
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
     @Formatted
     public Response archiveTop100List(String json) throws JsonGenerationException, JsonMappingException, IOException {
 		
-		log.info("JSON body:"+ json);
+		//log.info("JSON body:"+ json);
 		JSONObject body = new JSONObject(json);
 
 		Top100List top100list = HibernateUtil.getTop100List(body.getInt("id"));
@@ -312,6 +475,24 @@ public class RestService {
 		HibernateUtil.updateTop100List(top100list);
 
 		return Response.ok(top100list).header("Access-Control-Allow-Origin", "*").build();
+	}
+	
+	@POST
+    @Path("/top20/archivelist")
+    @Consumes(MediaType.APPLICATION_JSON)
+    @Produces(MediaType.APPLICATION_JSON)
+    @Formatted
+    public Response archiveTop20List(String json) throws JsonGenerationException, JsonMappingException, IOException {
+		
+		//log.info("JSON body:"+ json);
+		JSONObject body = new JSONObject(json);
+
+		Top20List top20list = HibernateUtil.getTop20List(body.getInt("id"));
+
+		top20list.setArchive(new Boolean(true));
+		HibernateUtil.updateTop20List(top20list);
+
+		return Response.ok(top20list).header("Access-Control-Allow-Origin", "*").build();
 	}
 	
 	@POST
@@ -330,6 +511,24 @@ public class RestService {
 		HibernateUtil.updateTop100List(top100list);
 
 		return Response.ok(top100list).header("Access-Control-Allow-Origin", "*").build();
+	}
+	
+	@POST
+    @Path("/top20/unarchivelist")
+    @Consumes(MediaType.APPLICATION_JSON)
+    @Produces(MediaType.APPLICATION_JSON)
+    @Formatted
+    public Response unarchiveTop20List(String json) throws JsonGenerationException, JsonMappingException, IOException {
+		
+		log.info("JSON body:"+ json);
+		JSONObject body = new JSONObject(json);
+
+		Top20List top20list = HibernateUtil.getTop20List(body.getInt("id"));
+
+		top20list.setArchive(new Boolean(false));
+		HibernateUtil.updateTop20List(top20list);
+
+		return Response.ok(top20list).header("Access-Control-Allow-Origin", "*").build();
 	}
 	
 	@POST

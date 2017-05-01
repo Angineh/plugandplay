@@ -72,7 +72,7 @@ CREATE TABLE `top100` (
   PRIMARY KEY (`ID`),
   KEY `top100` (`listName`),
   CONSTRAINT `top100` FOREIGN KEY (`listName`) REFERENCES `ventures` (`ID`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+) ENGINE=InnoDB AUTO_INCREMENT=13 DEFAULT CHARSET=utf8;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -83,42 +83,6 @@ DROP TABLE IF EXISTS `top100list`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!40101 SET character_set_client = utf8 */;
 CREATE TABLE `top100list` (
-  `ID` int(11) NOT NULL AUTO_INCREMENT,
-  `ARCHIVE` tinyint(1) DEFAULT NULL,
-  `LIST_NAME` varchar(255) DEFAULT NULL,
-  `time` datetime DEFAULT NULL,
-  PRIMARY KEY (`ID`),
-  UNIQUE KEY `LIST_NAME` (`LIST_NAME`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8;
-/*!40101 SET character_set_client = @saved_cs_client */;
-
---
--- Table structure for table `top20`
---
-
-DROP TABLE IF EXISTS `top20`;
-/*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!40101 SET character_set_client = utf8 */;
-CREATE TABLE `top20` (
-  `ID` int(11) NOT NULL AUTO_INCREMENT,
-  `LIST_NAME` varchar(255) DEFAULT NULL,
-  `ORDER_ID` int(11) DEFAULT NULL,
-  `VENTURE_ID` int(11) DEFAULT NULL,
-  `listNameTop20` int(11) DEFAULT NULL,
-  PRIMARY KEY (`ID`),
-  KEY `top20` (`listNameTop20`),
-  CONSTRAINT `top20` FOREIGN KEY (`listNameTop20`) REFERENCES `ventures` (`ID`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8;
-/*!40101 SET character_set_client = @saved_cs_client */;
-
---
--- Table structure for table `top20list`
---
-
-DROP TABLE IF EXISTS `top20list`;
-/*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!40101 SET character_set_client = utf8 */;
-CREATE TABLE `top20list` (
   `ID` int(11) NOT NULL AUTO_INCREMENT,
   `ARCHIVE` tinyint(1) DEFAULT NULL,
   `LIST_NAME` varchar(255) DEFAULT NULL,
@@ -161,11 +125,10 @@ CREATE TABLE `ventures` (
   `TAGS` varchar(255) DEFAULT NULL,
   `TIME_STAMP` varchar(255) DEFAULT NULL,
   `TOTAL_MONEY_RAISED` varchar(255) DEFAULT NULL,
-  `UPDATED` datetime DEFAULT NULL,
   `VERTICALS` varchar(255) DEFAULT NULL,
   `WEBSITE` varchar(255) DEFAULT NULL,
   PRIMARY KEY (`ID`)
-) ENGINE=InnoDB AUTO_INCREMENT=3 DEFAULT CHARSET=utf8;
+) ENGINE=InnoDB AUTO_INCREMENT=101 DEFAULT CHARSET=utf8;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -292,4 +255,4 @@ CREATE TABLE `ventures4` (
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2017-04-29 20:46:33
+-- Dump completed on 2017-04-26 22:20:19
