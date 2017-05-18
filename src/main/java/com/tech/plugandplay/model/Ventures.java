@@ -1,9 +1,15 @@
 package com.tech.plugandplay.model;
 
+import java.awt.image.BufferedImage;
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
 import java.io.Serializable;
 import java.util.Date;
 import java.util.List;
 
+import javax.imageio.ImageIO;
 import javax.persistence.CascadeType;
 import javax.persistence.Column;
 import javax.persistence.Entity;
@@ -11,12 +17,15 @@ import javax.persistence.FetchType;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
 import javax.persistence.JoinColumn;
+import javax.persistence.Lob;
 import javax.persistence.OneToMany;
 import javax.persistence.OneToOne;
 import javax.persistence.Table;
 import javax.persistence.Temporal;
 import javax.persistence.TemporalType;
 
+import org.apache.commons.codec.binary.Base64;
+import org.apache.commons.io.IOUtils;
 import org.hibernate.annotations.ForeignKey;
 import org.hibernate.annotations.LazyCollection;
 import org.hibernate.annotations.LazyCollectionOption;
@@ -43,6 +52,9 @@ public class Ventures implements Serializable {
 	@Field(index=Index.YES, analyze=Analyze.YES, store=Store.NO)
 	@Column(name="COMPANY_NAME")
 	private String companyName;
+	@Lob
+    @Column(name="PICTURE",columnDefinition="MEDIUMBLOB")
+    private String thumbnail; /*50 pixels*/
 	@Field(index=Index.YES, analyze=Analyze.YES, store=Store.NO)
 	@Column(name="BLURB")
 	private String blurb;
@@ -109,7 +121,7 @@ public class Ventures implements Serializable {
 	@Column(name="MATERIALS")
 	private String materials;
 	@Column(name="DATE_OF_INVESTMENT")
-	private String dataOfInvestment;
+	private String dateOfInvestment;
 	@Column(name="PORTFOLIO")
 	private boolean portfolio;
 	@Column(name="UPDATED")
@@ -278,11 +290,11 @@ public class Ventures implements Serializable {
 	public void setMaterials(String materials) {
 		this.materials = materials;
 	}
-	public String getDataOfInvestment() {
-		return dataOfInvestment;
+	public String getDateOfInvestment() {
+		return dateOfInvestment;
 	}
-	public void setDataOfInvestment(String dataOfInvestment) {
-		this.dataOfInvestment = dataOfInvestment;
+	public void setDateOfInvestment(String dateOfInvestment) {
+		this.dateOfInvestment = dateOfInvestment;
 	}
 	public boolean isPortfolio() {
 		return portfolio;
@@ -332,6 +344,18 @@ public class Ventures implements Serializable {
 				return;
 			}
 		}
+	}
+
+	public String getThumbnail() {
+		return thumbnail;
+	}
+
+	public void setThumbnail(BufferedImage thumbnail, String format) throws IOException {
+	        ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
+	        ImageIO.write(thumbnail, format, outputStream);
+	        InputStream stream = new ByteArrayInputStream(outputStream.toByteArray());
+	        byte[] bytes = IOUtils.toByteArray(stream);
+            this.thumbnail = Base64.encodeBase64String(bytes);
 	}
 	
 }

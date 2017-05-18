@@ -1,17 +1,24 @@
 package com.tech.plugandplay.api;
 
+import java.awt.image.BufferedImage;
+import java.io.File;
+import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.sql.Timestamp;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
+import java.util.Map;
 
+import javax.imageio.ImageIO;
 import javax.persistence.Column;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
 import javax.ws.rs.DefaultValue;
+import javax.ws.rs.FormParam;
 import javax.ws.rs.GET;
 import javax.ws.rs.HeaderParam;
 import javax.ws.rs.POST;
@@ -21,6 +28,7 @@ import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
 
@@ -30,6 +38,8 @@ import org.codehaus.jackson.JsonGenerationException;
 import org.codehaus.jackson.map.JsonMappingException;
 import org.codehaus.jackson.map.ObjectMapper;
 import org.jboss.resteasy.annotations.providers.jackson.Formatted;
+import org.jboss.resteasy.plugins.providers.multipart.InputPart;
+import org.jboss.resteasy.plugins.providers.multipart.MultipartFormDataInput;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
@@ -41,6 +51,8 @@ import com.tech.plugandplay.model.Top20;
 import com.tech.plugandplay.model.Top20List;
 import com.tech.plugandplay.model.Ventures;
 import com.tech.plugandplay.util.Constants;
+
+import net.coobird.thumbnailator.Thumbnails;
 
 @Path("/v1")
 public class RestService {
@@ -93,12 +105,13 @@ public class RestService {
 		
 	}
 	
-	@GET
+	@POST
     @Path("/top100/all")
     @Produces(MediaType.APPLICATION_JSON)
     @Formatted
-    public Response getTop100(@QueryParam("listName") String listName) {
-		
+    public Response getTop100(String json) {
+		JSONObject body = new JSONObject(json);
+		String listName = body.getString("listName");
     	List<Top100> top100 = HibernateUtil.getAllTop100(listName);
        	if(!top100.isEmpty()){
        		StringBuilder ids = new StringBuilder();
@@ -113,12 +126,13 @@ public class RestService {
     	}        
     }
 	
-	@GET
+	@POST
     @Path("/top20/all")
     @Produces(MediaType.APPLICATION_JSON)
     @Formatted
-    public Response getTop20(@QueryParam("listName") String listName) {
-		
+    public Response getTop20(String json) {	
+		JSONObject body = new JSONObject(json);
+		String listName = body.getString("listName");
     	List<Top20> top20 = HibernateUtil.getAllTop20(listName);
        	if(!top20.isEmpty()){
        		StringBuilder ids = new StringBuilder();
@@ -189,14 +203,17 @@ public class RestService {
     	}        
     }
 	
-	@DELETE
-	@Path("/top100/delete/{id}")
+	@POST
+	@Path("/top100/delete")
 	@Consumes("application/json")
 	@Produces("application/json")
 	@Formatted
-    public Response deleteFromTop100(@PathParam("id") int id, @QueryParam("listName") String listName){
+    public Response deleteFromTop100(String json){
 		//log.info("Delete from top 100 path param:"+ id);
-		Top100 deleteMe = HibernateUtil.getTop100(id, listName);
+		JSONObject body = new JSONObject(json);
+		int id = body.getInt("id");
+		String listName = body.getString("listName");
+		Top100 deleteMe = HibernateUtil.getTop100(id,listName );
 		if(deleteMe == null){
 			return Response.status(Constants.HTTPCodes.BAD_REQUEST).entity("Could not delete top 100!").header("Access-Control-Allow-Origin", "*").build();
 		}
@@ -217,13 +234,16 @@ public class RestService {
 		
 	}
 
-	@DELETE
-	@Path("/top100/delete/{id}")
+	@POST
+	@Path("/top20/delete")
 	@Consumes("application/json")
 	@Produces("application/json")
 	@Formatted
-    public Response deleteFromTop20(@PathParam("id") int id, @QueryParam("listName") String listName){
+    public Response deleteFromTop20(String json){
 		//log.info("Delete from top 20 path param:"+ id);
+		JSONObject body = new JSONObject(json);
+		int id = body.getInt("id");
+		String listName = body.getString("listName");
 		Top20 deleteMe = HibernateUtil.getTop20(id, listName);
 		if(deleteMe == null){
 			return Response.status(Constants.HTTPCodes.BAD_REQUEST).entity("Could not delete top 20!").header("Access-Control-Allow-Origin", "*").build();
@@ -532,6 +552,272 @@ public class RestService {
 	}
 	
 	@POST
+    @Path("/ventures/update")
+    @Consumes(MediaType.APPLICATION_JSON)
+    @Produces(MediaType.APPLICATION_JSON)
+    @Formatted
+    public Response updateVenture(String json) {
+		
+		//log.info("JSON body:"+ json);
+		JSONObject body = new JSONObject(json);
+		
+		Ventures venture = HibernateUtil.getVenture(body.getInt("id"));
+		
+		if(venture == null){
+			return Response.status(Status.NO_CONTENT).entity("Could not find venture with id "+body.getInt("id")+" to update!").header("Access-Control-Allow-Origin", "*").build();
+		}
+		if(!body.isNull("advantage")){
+			venture.setAdvantage(body.getString("advantage"));
+		}
+		if(!body.isNull("b2bb2c")){
+			venture.setB2bb2c(body.getString("b2bb2c"));
+		}
+		if(!body.isNull("background")){
+			venture.setBackground(body.getString("background"));
+		}
+		if(!body.isNull("blurb")){
+			venture.setBlurb(body.getString("blurb"));
+		}
+		if(!body.isNull("caseStudy")){
+			venture.setCaseStudy(body.getString("caseStudy"));
+		}
+		if(!body.isNull("city")){
+			venture.setCity(body.getString("city"));
+		}
+		if(!body.isNull("comments")){
+			venture.setComments(body.getString("comments"));
+		}
+		if(!body.isNull("companyName")){
+			venture.setCompanyName(body.getString("companyName"));
+		}
+		if(!body.isNull("competition")){
+			venture.setCompetition(body.getString("competition"));
+		}
+		if(!body.isNull("contactName")){
+			venture.setContactName(body.getString("contactName"));
+		}
+		if(!body.isNull("email")){
+			venture.setEmail(body.getString("email"));
+		}
+		if(!body.isNull("employees")){
+			venture.setEmployees(body.getString("employees"));
+		}
+		if(!body.isNull("founded")){
+			venture.setFounded(body.getString("founded"));
+		}
+		if(!body.isNull("location")){
+			venture.setLocation(body.getString("location"));
+		}
+		if(!body.isNull("materials")){
+			venture.setMaterials(body.getString("materials"));
+		}
+		if(!body.isNull("partnerInterests")){
+			venture.setPartnerInterests(body.getString("partnerInterests"));
+		}
+		if(!body.isNull("phoneNumber")){
+			venture.setPhoneNumber(body.getString("phoneNumber"));
+		}
+		if(!body.isNull("pnpContact")){
+			venture.setPnpContact(body.getString("pnpContact"));
+		}
+		if(!body.isNull("stage")){
+			venture.setStage(body.getString("stage"));
+		}
+		if(!body.isNull("tags")){
+			venture.setTags(body.getString("tags"));
+		}
+		if(!body.isNull("totalMoneyRaised")){
+			venture.setTotalMoneyRaised(body.getString("totalMoneyRaised"));
+		}
+		if(!body.isNull("verticals")){
+			venture.setVerticals(body.getString("verticals"));
+		}
+		if(!body.isNull("website")){
+			venture.setWebsite(body.getString("website"));
+		}
+		if(!body.isNull("portfolio")){
+			venture.setPortfolio(body.getBoolean("portfolio"));
+		}
+		if(!body.isNull("dateOfInvestment")){
+			venture.setDateOfInvestment(body.getString("dateOfInvestment"));
+		}
+		venture.setUpdated(new Date());;
+	
+		HibernateUtil.updateVenture(venture);
+		return Response.ok(venture).header("Access-Control-Allow-Origin", "*").build();
+	}
+	
+	@POST
+    @Path("/ventures/logo")
+    @Consumes(MediaType.MULTIPART_FORM_DATA)
+	@Produces(MediaType.APPLICATION_JSON)
+    @Formatted
+    public Response updateVentureLogo(MultipartFormDataInput multipart) {
+		
+		String fileName = "";
+		int id = 0;
+		Map<String, List<InputPart>> formParts = multipart.getFormDataMap();
+		try {
+			id = multipart.getFormDataPart("id", Integer.class, null);
+			log.info("Ventures logo id: "+ id);
+		} catch (IOException e) {
+			log.fatal(e.getMessage(), e.fillInStackTrace());
+			return Response.status(Status.NO_CONTENT).entity("Failed to update startup logo!").header("Access-Control-Allow-Origin", "*").build();
+		}
+		Ventures venture = HibernateUtil.getVenture(id);
+		List<InputPart> inPart = formParts.get("file"); // "file" should match the name attribute of your HTML file input 
+		for (InputPart inputPart : inPart) {
+		  // Retrieve headers, read the Content-Disposition header to obtain the original name of the file
+			MultivaluedMap<String, String> headers = inputPart.getHeaders();
+			String[] contentDispositionHeader = headers.getFirst("Content-Disposition").split(";");
+			for (String name : contentDispositionHeader) {
+			  if ((name.trim().startsWith("filename"))) {
+			    String[] tmp = name.split("=");
+			    fileName = tmp[1].trim().replaceAll("\"","");          
+			  }
+			}
+		}
+		log.info("File name: "+ fileName);		
+		try (InputStream in = multipart.getFormDataPart("file", InputStream.class, null);
+		        FileOutputStream fos = new FileOutputStream("/tmp/images/startups/"+id+fileName.substring(fileName.lastIndexOf("."), fileName.length()))) {
+		        byte[] buff = new byte[1024];
+		        int count;
+		        while ((count = in.read(buff)) != -1) {
+		            fos.write(buff, 0, count);
+		        }
+	    } catch (IOException e) {
+
+	    	log.fatal(e.getMessage(), e.fillInStackTrace());
+			return Response.status(Status.NO_CONTENT).entity("Failed to update startup logo!").header("Access-Control-Allow-Origin", "*").build();
+		}
+		
+		try {			
+			BufferedImage originalImage = ImageIO.read(new File("/tmp/images/startups/"+id+fileName.substring(fileName.lastIndexOf("."), fileName.length())));
+			BufferedImage thumbnail = Thumbnails.of(originalImage).size(100, 100).asBufferedImage();
+			venture.setThumbnail(thumbnail, fileName.substring(fileName.lastIndexOf(".")+1, fileName.length()));
+			venture = HibernateUtil.updateVenture(venture);
+		} catch (IOException e) {
+
+			log.fatal(e.getMessage(), e.fillInStackTrace());
+			return Response.status(Status.NO_CONTENT).entity("Failed to update startup logo!").header("Access-Control-Allow-Origin", "*").build();
+			
+		}
+		
+		return Response.ok(venture).header("Access-Control-Allow-Origin", "*").build();
+	}
+	
+	@POST
+    @Path("/ventures/create")
+    @Consumes(MediaType.APPLICATION_JSON)
+    @Produces(MediaType.APPLICATION_JSON)
+    @Formatted
+    public Response createVenture(String json) {
+		
+		//log.info("JSON body:"+ json);
+		JSONObject body = new JSONObject(json);
+/*		Ventures venture = HibernateUtil.getVenture(body.getInt("id"));		
+		if(venture == null){
+			return Response.status(Status.NO_CONTENT).entity("Could not find venture with id "+body.getInt("id")+" to update!").header("Access-Control-Allow-Origin", "*").build();
+		}*/
+		Ventures venture = new Ventures();
+		if(!body.isNull("advantage")){
+			venture.setAdvantage(body.getString("advantage"));
+		}
+		if(!body.isNull("b2bb2c")){
+			List<String> listb2b = new ArrayList<String>();
+			for (int i = 0; i < body.getJSONArray("b2bb2c").length(); i++) {
+			    listb2b.add(body.getJSONArray("b2bb2c").getString(i));
+			}
+			venture.setB2bb2c(String.join(",", listb2b));
+		}
+		
+		if(!body.isNull("background")){
+			venture.setBackground(body.getString("background"));
+		}
+		if(!body.isNull("blurb")){
+			venture.setBlurb(body.getString("blurb"));
+		}
+		if(!body.isNull("caseStudy")){
+			venture.setCaseStudy(body.getString("caseStudy"));
+		}
+		if(!body.isNull("city")){
+			venture.setCity(body.getString("city"));
+		}
+		if(!body.isNull("comments")){
+			venture.setComments(body.getString("comments"));
+		}
+		if(!body.isNull("companyName")){
+			venture.setCompanyName(body.getString("companyName"));
+		}
+		if(!body.isNull("competition")){
+			venture.setCompetition(body.getString("competition"));
+		}
+		if(!body.isNull("contactName")){
+			venture.setContactName(body.getString("contactName"));
+		}
+		if(!body.isNull("email")){
+			venture.setEmail(body.getString("email"));
+		}
+		if(!body.isNull("employees")){
+			venture.setEmployees(body.getString("employees"));
+		}
+		if(!body.isNull("founded")){
+			venture.setFounded(body.getString("founded"));
+		}
+		if(!body.isNull("location")){
+			venture.setLocation(body.getString("location"));
+		}
+		if(!body.isNull("materials")){
+			venture.setMaterials(body.getString("materials"));
+		}
+		if(!body.isNull("partnerInterests")){
+			venture.setPartnerInterests(body.getString("partnerInterests"));
+		}
+		if(!body.isNull("phoneNumber")){
+			venture.setPhoneNumber(body.getString("phoneNumber"));
+		}
+		if(!body.isNull("pnpContact")){
+			venture.setPnpContact(body.getString("pnpContact"));
+		}
+		if(!body.isNull("stage")){
+			venture.setStage(body.getString("stage"));
+		}
+		if(!body.isNull("tags")){
+			List<String> listtabs = new ArrayList<String>();
+			for (int i = 0; i < body.getJSONArray("tags").length(); i++) {
+				listtabs.add(body.getJSONArray("tags").getString(i));
+			}
+			venture.setTags(String.join(",", listtabs));
+		}
+		if(!body.isNull("totalMoneyRaised")){
+			venture.setTotalMoneyRaised(body.getString("totalMoneyRaised"));
+		}
+		if(!body.isNull("verticals")){
+			List<String> listverticals = new ArrayList<String>();
+			for (int i = 0; i < body.getJSONArray("verticals").length(); i++) {
+				listverticals.add(body.getJSONArray("verticals").getString(i));
+			}
+			venture.setVerticals(String.join(",", listverticals));
+		}
+		if(!body.isNull("website")){
+			venture.setWebsite(body.getString("website"));
+		}
+		if(!body.isNull("portfolio")){
+			venture.setPortfolio(body.getBoolean("portfolio"));
+		}
+		if(!body.isNull("dateOfInvestment")){
+			venture.setDateOfInvestment(body.getString("dateOfInvestment"));
+		}
+		SimpleDateFormat sdf = new SimpleDateFormat("MM/dd/yyyy HH:mm:ss");
+		Timestamp time = new Timestamp(System.currentTimeMillis());
+		venture.setTimestamp(sdf.format(time));
+		venture.setUpdated(new Date());
+		
+		HibernateUtil.newVenture(venture);
+		return Response.ok(venture).header("Access-Control-Allow-Origin", "*").build();
+	}
+	
+	@POST
     @Path("/ventures/new")
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
@@ -591,7 +877,7 @@ public class RestService {
 		String caseStudy = "";
 		String comments = "";
 		String tags = "";
-		String materials = "";
+		//String materials = "";
 		
 		for (int i = 0; i < fields.length(); i++) {
 			if(fields.getJSONObject(i).getString("title").contains("Select some tags")){
@@ -690,10 +976,16 @@ public class RestService {
 			}
 			if(answers.getJSONObject(i).getJSONObject("field").getString("id").equals(verticals)){
 				List<String> list = new ArrayList<String>();
-				for(int j = 0; j < answers.getJSONObject(i).getJSONObject("choices").getJSONArray("labels").length(); j++){
-				    list.add(answers.getJSONObject(i).getJSONObject("choices").getJSONArray("labels").getString(j));
+				if(!answers.getJSONObject(i).getJSONObject("choices").isNull("labels")){
+					for(int j = 0; j < answers.getJSONObject(i).getJSONObject("choices").getJSONArray("labels").length(); j++){
+					    list.add(answers.getJSONObject(i).getJSONObject("choices").getJSONArray("labels").getString(j));
+					}	
+				}
+				if(!answers.getJSONObject(i).getJSONObject("choices").isNull("other")){
+					list.add(answers.getJSONObject(i).getJSONObject("choices").getString("other"));	
 				}
 				venture.setVerticals(String.join(",",list));
+				
 			}
 			if(answers.getJSONObject(i).getJSONObject("field").getString("id").equals(comments)){
 				venture.setComments(answers.getJSONObject(i).getString("text"));
@@ -723,11 +1015,11 @@ public class RestService {
 				venture.setCompetition(answers.getJSONObject(i).getString("text"));
 			}
 			if(answers.getJSONObject(i).getJSONObject("field").getString("id").equals(b2bb2c)){
-				List<String> list = new ArrayList<String>();
+				List<String> list = new ArrayList<String>();		
 				for(int j = 0; j < answers.getJSONObject(i).getJSONObject("choices").getJSONArray("labels").length(); j++){
 				    list.add(answers.getJSONObject(i).getJSONObject("choices").getJSONArray("labels").getString(j));
 				}
-				venture.setB2bb2c(String.join(",",list));
+				venture.setB2bb2c(String.join(",",list));	
 			}
 			if(answers.getJSONObject(i).getJSONObject("field").getString("id").equals(partnerInterests)){
 				venture.setPartnerInterests(answers.getJSONObject(i).getString("text"));
@@ -751,6 +1043,7 @@ public class RestService {
 		SimpleDateFormat sdf = new SimpleDateFormat("MM/dd/yyyy HH:mm:ss");
 		Timestamp time = new Timestamp(System.currentTimeMillis());
 		venture.setTimestamp(sdf.format(time));
+		venture.setUpdated(new Date());
 
 		venture = HibernateUtil.newVenture(venture);
 		return Response.ok(venture).header("Access-Control-Allow-Origin", "*").build();

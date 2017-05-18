@@ -1,0 +1,36 @@
+{  
+   "id":5260,
+   "timestamp":"05/07/2017 09:07:10",
+   "companyName":"BuildPulse Inc.",
+   "blurb":"BuildPulse is a SaaS service that helps building owners and facility managers save time and money. It aggregates and analyzes data from legacy HVAC control systems across building portfolios. Helping teams prioritize potential comfort and equipment failures, optimizing technician labor, extending equipment lifetimes, and reduce energy usage. BuildPulse is a plug and play solution that provides customers ROI in months compared to years.",
+   "verticals":"Sustainability ,IoT",
+   "website":"http://www.buildpulse.com",
+   "pnpContact":"Ahmed Alireza",
+   "contactName":"Brice Kosnik",
+   "email":"BKosnik@buildpulse.com",
+   "phoneNumber":"4252098799",
+   "totalMoneyRaised":"$1,800,000",
+   "stage":"Seed",
+   "b2bb2c":"B2B",
+   "employees":"11/5",
+   "location":"North America",
+   "city":"United States, Seattle WA",
+   "competition":"",
+   "advantage":"Automation & Machine Learning based data alignment - Patent Pending\n\nNon JACE based data logger, rapid plug and play connectivity to legacy and modern control systems. \n\nOut of the box reporting and value from cloud service derived from the network effect of customers, commissioning agents, and service providers, continuously vetting and building new analysis.",
+   "background":"Brice Kosnik - Industry Expert, Physics, HVAC Control Systems. \n\nJason Burt - MBA, Physics, Experience d developer, analyst, and product manager.",
+   "founded":"2014-01-01",
+   "partnerInterests":"Daikin, Honeywell, Simon Properties",
+   "caseStudy":"Location of Case Studies for download:\nhttp://www.buildpulse.com/case-studies/\n\nGonzaga:\nShipped data loggers to client where the facilities team plugged them into their network. On boarded and aligned 14 buildings, ~ 1.4MM SqFt, of Automated Logic controlled dinning, science, research laboratory, teaching, and rec space, in 1 week. Helped to balance and optimize LEED Gold student union building, and move campus to delta T sequences and identify faulty economizers, DX compressors, pumps, fans, and valves across monitored portfolio. Identified 5x ROI in first 3 months. \nhttp://www.buildpulse.com/wp-content/uploads/2015/11/Case-study-GONZAGA.pdf",
+   "comments":"BuildPulse is completing beta testing of feedback control to HVAC  systems, this will allow us to sell an additional product that returns 10x on energy without anyone needing to turn a wrench and we believe will be very sticky and 3x more profitable. ",
+   "tags":"Cloud,Energy,AI,SaaS,Indust. IoT,Analytics,Enterprise",
+   "materials":"",
+   "dateOfInvestment":null,
+   "portfolio":false,
+   "updated":"moments from now",
+   "top100":[  
+
+   ],
+   "top20":[  
+
+   ]
+}

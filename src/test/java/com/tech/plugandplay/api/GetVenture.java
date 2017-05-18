@@ -11,8 +11,8 @@ import com.tech.plugandplay.util.CommonUtil;
 
 public class GetVenture {
 	
-	static String id = "50";
-	static String hostname = "localhost";
+	static String id = "5304";
+	static String hostname = "54.145.172.103";
 	
 /*	@BeforeClass
 	@Parameters({"id","hostname"})

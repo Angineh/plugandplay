@@ -11,7 +11,7 @@ import com.jayway.restassured.RestAssured;
 import com.jayway.restassured.http.ContentType;
 import com.jayway.restassured.response.Response;
 
-public class AddTop100 {
+public class AddTop20 {
 	
 	
 	@Test
@@ -21,7 +21,7 @@ public class AddTop100 {
 		for(int i = 50; i < 60; i ++){
 			
 			String content = "{\"id\":"+i+",\"listName\":\""+name+"\"}";
-			Response response = RestAssured.given().contentType(ContentType.JSON).body(content).post("http://localhost:8080/plugandplay/api/v1/ventures/addtop100");
+			Response response = RestAssured.given().contentType(ContentType.JSON).body(content).post("http://localhost:8080/plugandplay/api/v1/ventures/addtop20");
 			
 			System.out.println(response.getStatusLine());
 			System.out.println(response.getBody().asString());

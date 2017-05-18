@@ -1,0 +1,31 @@
+{  
+   "companyName":"A new company",
+   "blurb":"blah balh blah",
+   "verticals":[  
+      "Brand and Retail",
+      "Fintech",
+      "Travel and Hospitality"
+   ],
+   "website":"www.blah.com",
+   "pnpContact":"Alex Tran",
+   "contactName":"Raj Desai",
+   "email":"raj.d.desai@gmail.com",
+   "phoneNumber":"530.305.6230",
+   "totalMoneyRaised":null,
+   "stage":"Seed",
+   "b2bb2c":null,
+   "employees":"100,000",
+   "location":"South America",
+   "city":null,
+   "competition":"The internet.",
+   "advantage":"My IP",
+   "background":"From the USA",
+   "founded":null,
+   "partnerInterests":null,
+   "caseStudy":null,
+   "comments":null,
+   "tags":null,
+   "materials":null,
+   "dateOfInvestment":null,
+   "portfolio":false
+}

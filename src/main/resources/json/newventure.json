@@ -1,0 +1,38 @@
+{  
+   "companyName":"Test Company",
+   "blurb":"This is a blurb",
+   "verticals":[  
+      "Health and Wellness",
+      "Media",
+      "Materials"
+   ],
+   "website":"www.test.com",
+   "pnpContact":"Alex Tran",
+   "contactName":"Raj Desai",
+   "email":"raj.d.desai@gmail.com",
+   "phoneNumber":"530-305-6230",
+   "totalMoneyRaised":null,
+   "stage":"Pre-seed",
+   "b2bb2c":[  
+      "B2B",
+      "B2C"
+   ],
+   "employees":"1000",
+   "location":"Bay Area",
+   "city":"San Jose",
+   "competition":"PNP",
+   "advantage":"IPs",
+   "background":"Developer",
+   "founded":"12/2/2014",
+   "partnerInterests":null,
+   "caseStudy":null,
+   "comments":null,
+   "tags":[  
+      "Robotics",
+      "Analytics",
+      "VR/AR"
+   ],
+   "materials":null,
+   "dateOfInvestment":"2017-04-06",
+   "portfolio":null
+}
