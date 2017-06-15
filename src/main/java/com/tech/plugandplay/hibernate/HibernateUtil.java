@@ -15,6 +15,8 @@ import org.hibernate.search.FullTextSession;
 import org.hibernate.search.Search;
 import org.hibernate.search.query.dsl.QueryBuilder;
 
+import com.tech.plugandplay.model.Batch;
+import com.tech.plugandplay.model.BatchList;
 import com.tech.plugandplay.model.Business;
 import com.tech.plugandplay.model.Cluster;
 import com.tech.plugandplay.model.Nodes;
@@ -158,6 +160,22 @@ public class HibernateUtil {
 		}
 	}
 	
+	public static Batch addBatch(Batch batch) {
+		
+		Session session = SessionFactoryUtil.getSessionFactory().getCurrentSession();
+		try {
+			session.getTransaction().begin();
+			session.save(batch);
+			session.getTransaction().commit();
+			return batch;
+		  
+		} catch (RuntimeException e) {
+		     session.getTransaction().rollback();
+		     log.fatal(e.getMessage(), e.fillInStackTrace());
+		     throw e;
+		}
+	}
+	
 	public static Top100List addTop100List(Top100List top100list) {
 		
 		Session session = SessionFactoryUtil.getSessionFactory().getCurrentSession();
@@ -190,6 +208,21 @@ public class HibernateUtil {
 		}
 	}
 	
+	public static BatchList addBatchList(BatchList batchlist) {
+		
+		Session session = SessionFactoryUtil.getSessionFactory().getCurrentSession();
+		try {
+			session.getTransaction().begin();
+			session.save(batchlist);
+			session.getTransaction().commit();
+			return batchlist;
+		  
+		} catch (RuntimeException e) {
+		     session.getTransaction().rollback();
+		     log.fatal(e.getMessage(), e.fillInStackTrace());
+		     throw e;
+		}
+	}
 
 	
 	public static Ventures newCompany(Ventures company) {
@@ -282,6 +315,21 @@ public class HibernateUtil {
 		}
 	}
 	
+	public static Batch updateBatch(Batch batch) {
+		Session session = SessionFactoryUtil.getSessionFactory().getCurrentSession();
+		try {
+			session.getTransaction().begin();
+			session.update(batch);
+			session.getTransaction().commit();
+			return batch;
+		  
+		} catch (RuntimeException e) {
+		     session.getTransaction().rollback();
+		     log.fatal(e.getMessage(), e.fillInStackTrace());
+		     throw e;
+		}
+	}
+	
 	public static Top100List updateTop100List(Top100List top100list) {
 		Session session = SessionFactoryUtil.getSessionFactory().getCurrentSession();
 		try {
@@ -304,6 +352,21 @@ public class HibernateUtil {
 			session.update(top20list);
 			session.getTransaction().commit();
 			return top20list;
+		  
+		} catch (RuntimeException e) {
+		     session.getTransaction().rollback();
+		     log.fatal(e.getMessage(), e.fillInStackTrace());
+		     throw e;
+		}
+	}
+	
+	public static BatchList updateBatchList(BatchList batchlist) {
+		Session session = SessionFactoryUtil.getSessionFactory().getCurrentSession();
+		try {
+			session.getTransaction().begin();
+			session.update(batchlist);
+			session.getTransaction().commit();
+			return batchlist;
 		  
 		} catch (RuntimeException e) {
 		     session.getTransaction().rollback();
@@ -383,6 +446,20 @@ public class HibernateUtil {
 		}
 	}
 	
+	public static void deleteBatch(Batch batch) {
+		Session session = SessionFactoryUtil.getSessionFactory().getCurrentSession();
+		try {
+			session.getTransaction().begin();		
+			session.delete(batch);
+			session.getTransaction().commit();
+		  
+		} catch (RuntimeException e) {
+		     session.getTransaction().rollback();
+		     log.fatal(e.getMessage(), e.fillInStackTrace());
+		     throw e;
+		}
+	}
+	
 	public static void deleteVentureTop100(int id) {
 		Session session = SessionFactoryUtil.getSessionFactory().getCurrentSession();
 		try {
@@ -399,6 +476,21 @@ public class HibernateUtil {
 	}
 	
 	public static void deleteVentureTop20(int id) {
+		Session session = SessionFactoryUtil.getSessionFactory().getCurrentSession();
+		try {
+			session.getTransaction().begin();
+			SQLQuery sqlQuery = session.createSQLQuery("update ventures set venture_id=NULL where id = "+id);
+			sqlQuery.executeUpdate();
+			session.getTransaction().commit();
+		  
+		} catch (RuntimeException e) {
+		     session.getTransaction().rollback();
+		     log.fatal(e.getMessage(), e.fillInStackTrace());
+		     throw e;
+		}
+	}
+	
+	public static void deleteVentureBatch(int id) {
 		Session session = SessionFactoryUtil.getSessionFactory().getCurrentSession();
 		try {
 			session.getTransaction().begin();
@@ -599,6 +691,25 @@ public class HibernateUtil {
 	     }
 	}
 	
+	public static List<Ventures> getVentureBatch(String ids) {
+		 Session session = SessionFactoryUtil.getSessionFactory().getCurrentSession();
+	     try {
+	     session.getTransaction().begin();
+	     //log.info("Ids:"+ids);
+	     @SuppressWarnings("unchecked")
+	     //List<Ventures> ventures = session.createCriteria(Ventures.class).add(Restrictions.in("id", ids)).list();
+		 List<Ventures> ventures = session.createQuery("from Ventures where id in ("+ids+") ORDER BY FIELD(id,"+ids+")").list();
+	     session.getTransaction().commit();
+	     
+	     return ventures;
+	      
+	     } catch (RuntimeException e) {
+	         session.getTransaction().rollback();
+	         log.fatal(e.getMessage(), e.fillInStackTrace());
+	         throw e;
+	     }
+	}
+	
 	public static List<Top100> getAllTop100(String listName) {
 		 Session session = SessionFactoryUtil.getSessionFactory().getCurrentSession();
 	     try {
@@ -627,6 +738,24 @@ public class HibernateUtil {
 	     session.getTransaction().commit();
 	     
 	     return top20;
+	      
+	     } catch (RuntimeException e) {
+	         session.getTransaction().rollback();
+	         log.fatal(e.getMessage(), e.fillInStackTrace());
+	         throw e;
+	     }
+	}
+	
+	public static List<Batch> getAllBatch(String batchName) {
+		 Session session = SessionFactoryUtil.getSessionFactory().getCurrentSession();
+	     try {
+	     session.getTransaction().begin();
+	     
+	     @SuppressWarnings("unchecked")
+		 List<Batch> batch = session.createCriteria(Batch.class).add(Restrictions.eq("batchName", batchName)).addOrder(Order.asc("order")).list();
+	     session.getTransaction().commit();
+	     
+	     return batch;
 	      
 	     } catch (RuntimeException e) {
 	         session.getTransaction().rollback();
@@ -671,6 +800,24 @@ public class HibernateUtil {
 	     }
 	}
 	
+	public static List<Batch> getAllBatch() {
+		 Session session = SessionFactoryUtil.getSessionFactory().getCurrentSession();
+	     try {
+	     session.getTransaction().begin();
+	     
+	     @SuppressWarnings("unchecked")
+		 List<Batch> batch = session.createCriteria(Batch.class).addOrder(Order.asc("order")).list();
+	     session.getTransaction().commit();
+	     
+	     return batch;
+	      
+	     } catch (RuntimeException e) {
+	         session.getTransaction().rollback();
+	         log.fatal(e.getMessage(), e.fillInStackTrace());
+	         throw e;
+	     }
+	}
+	
 	public static List<Top100List> getTop100Lists() {
 		 Session session = SessionFactoryUtil.getSessionFactory().getCurrentSession();
 	     try {
@@ -707,6 +854,24 @@ public class HibernateUtil {
 	     }
 	}
 	
+	public static List<BatchList> getBatchLists() {
+		 Session session = SessionFactoryUtil.getSessionFactory().getCurrentSession();
+	     try {
+	     session.getTransaction().begin();
+	     
+	     @SuppressWarnings("unchecked")
+		 List<BatchList> batchlist = session.createCriteria(BatchList.class).add(Restrictions.eq("archive", new Boolean(false))).list();
+	     session.getTransaction().commit();
+	     
+	     return batchlist;
+	      
+	     } catch (RuntimeException e) {
+	         session.getTransaction().rollback();
+	         log.fatal(e.getMessage(), e.fillInStackTrace());
+	         throw e;
+	     }
+	}
+	
 	public static List<Top100List> getTop100ListsArchived() {
 		 Session session = SessionFactoryUtil.getSessionFactory().getCurrentSession();
 	     try {
@@ -735,6 +900,24 @@ public class HibernateUtil {
 	     session.getTransaction().commit();
 	     
 	     return top20list;
+	      
+	     } catch (RuntimeException e) {
+	         session.getTransaction().rollback();
+	         log.fatal(e.getMessage(), e.fillInStackTrace());
+	         throw e;
+	     }
+	}
+	
+	public static List<BatchList> getBatchListsArchived() {
+		 Session session = SessionFactoryUtil.getSessionFactory().getCurrentSession();
+	     try {
+	     session.getTransaction().begin();
+	     
+	     @SuppressWarnings("unchecked")
+		 List<BatchList> batchlist = session.createCriteria(BatchList.class).add(Restrictions.eq("archive", new Boolean(true))).list();
+	     session.getTransaction().commit();
+	     
+	     return batchlist;
 	      
 	     } catch (RuntimeException e) {
 	         session.getTransaction().rollback();
@@ -828,7 +1011,33 @@ public class HibernateUtil {
 	         return null;
 	         //throw e;
 	     }
-}
+	}
+	
+	public static Batch getBatch(int venture_id, String batchName) {
+		 Session session = SessionFactoryUtil.getSessionFactory().getCurrentSession();
+	     try {
+	     session.getTransaction().begin();
+	     
+	     @SuppressWarnings("unchecked")
+		List<Batch> batchlist = (List<Batch>) session.createCriteria(Batch.class).add(Restrictions.eq("batchName", batchName)).add(Restrictions.eq("venture_id", venture_id)).list();
+	    		 //session.get(Top100.class, venture_id);
+	     session.getTransaction().commit();
+	     Batch batch = new Batch();
+	     if(!batchlist.isEmpty()){
+	    	 batch = (Batch) batchlist.get(0);
+		     //log.info("Found top20: "+top20.getVenture_id()+" "+top20.getListName());
+		     return batch; 
+	     }else{
+	    	 return null;
+	     }
+	      
+	     } catch (RuntimeException e) {
+	         session.getTransaction().rollback();
+	         log.fatal(e.getMessage(), e.fillInStackTrace());
+	         return null;
+	         //throw e;
+	     }
+	}
 	
 	public static Top100List getTop100List(int id) {
 		 Session session = SessionFactoryUtil.getSessionFactory().getCurrentSession();
@@ -857,6 +1066,24 @@ public class HibernateUtil {
 	     session.getTransaction().commit();
 	     
 	     return top20list;
+	      
+	     } catch (RuntimeException e) {
+	         session.getTransaction().rollback();
+	         log.fatal(e.getMessage(), e.fillInStackTrace());
+	         return null;
+	         //throw e;
+	     }
+	}
+	
+	public static BatchList getBatchList(int id) {
+		 Session session = SessionFactoryUtil.getSessionFactory().getCurrentSession();
+	     try {
+	     session.getTransaction().begin();
+	     
+	     BatchList batchlist = (BatchList) session.get(BatchList.class, id);
+	     session.getTransaction().commit();
+	     
+	     return batchlist;
 	      
 	     } catch (RuntimeException e) {
 	         session.getTransaction().rollback();
@@ -903,6 +1130,31 @@ public class HibernateUtil {
 	    	 top20list = (Top20List) tmp.get(0);
 		     //log.info("Found list: "+top20list.getListName());
 		     return top20list; 
+	     }else{
+	    	 return null;
+	     }
+	     
+	      
+	     } catch (RuntimeException e) {
+	         session.getTransaction().rollback();
+	         log.fatal(e.getMessage(), e.fillInStackTrace());
+	         return null;
+	         //throw e;
+	     }
+	}
+	
+	public static BatchList getBatchListByName(String batchName) {
+		 Session session = SessionFactoryUtil.getSessionFactory().getCurrentSession();
+	     try {
+	     session.getTransaction().begin();
+	     @SuppressWarnings("rawtypes")
+		 List tmp = session.createCriteria(BatchList.class).add(Restrictions.eq("batchName", batchName)).list();
+	     session.getTransaction().commit();
+	     BatchList batchlist = new BatchList();
+	     if(!tmp.isEmpty()){
+	    	 batchlist = (BatchList) tmp.get(0);
+		     //log.info("Found list: "+top20list.getListName());
+		     return batchlist; 
 	     }else{
 	    	 return null;
 	     }

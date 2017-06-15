@@ -54,7 +54,7 @@ public class Ventures implements Serializable {
 	private String companyName;
 	@Lob
     @Column(name="PICTURE",columnDefinition="MEDIUMBLOB")
-    private String thumbnail; /*50 pixels*/
+    private String thumbnail; /*100 pixels*/
 	@Field(index=Index.YES, analyze=Analyze.YES, store=Store.NO)
 	@Column(name="BLURB")
 	private String blurb;
@@ -139,6 +139,12 @@ public class Ventures implements Serializable {
     @JoinColumn(name="listNameTop20")
     @ForeignKey(name = "top20")
 	private List<Top20> top20;
+	@IndexedEmbedded
+	@LazyCollection(LazyCollectionOption.FALSE)
+	@OneToMany(cascade=CascadeType.ALL, orphanRemoval=true)
+    @JoinColumn(name="batchName")
+    @ForeignKey(name = "batch")
+	private List<Batch> batch;
 	
 	public int getId() {
 		return id;
@@ -341,6 +347,24 @@ public class Ventures implements Serializable {
 		for(Top20 list: top20){
 			if(list.getListName().equalsIgnoreCase(removeme.getListName())){
 				top20.remove(list);
+				return;
+			}
+		}
+	}
+	
+	public List<Batch> getBatch() {
+		return batch;
+	}
+	public void setBatch(List<Batch> batch) {
+		this.batch = batch;
+	}
+	public void addBatch(Batch addme){
+		batch.add(addme);
+	}
+	public void removeBatch(Batch removeme){
+		for(Batch list: batch){
+			if(list.getListName().equalsIgnoreCase(removeme.getListName())){
+				batch.remove(list);
 				return;
 			}
 		}

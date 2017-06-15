@@ -5,6 +5,8 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.net.MalformedURLException;
+import java.net.URL;
 import java.sql.Timestamp;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -44,6 +46,8 @@ import org.json.JSONArray;
 import org.json.JSONObject;
 
 import com.tech.plugandplay.hibernate.HibernateUtil;
+import com.tech.plugandplay.model.Batch;
+import com.tech.plugandplay.model.BatchList;
 import com.tech.plugandplay.model.Business;
 import com.tech.plugandplay.model.Top100;
 import com.tech.plugandplay.model.Top100List;
@@ -147,6 +151,27 @@ public class RestService {
     	}        
     }
 	
+	@POST
+    @Path("/batch/all")
+    @Produces(MediaType.APPLICATION_JSON)
+    @Formatted
+    public Response getBatch(String json) {	
+		JSONObject body = new JSONObject(json);
+		String batchName = body.getString("listName");
+    	List<Batch> batch = HibernateUtil.getAllBatch(batchName);
+       	if(!batch.isEmpty()){
+       		StringBuilder ids = new StringBuilder();
+       		for(Batch venture: batch){
+       			ids.append(venture.getVenture_id());
+       			ids.append(",");
+       		} 		
+       		List<Ventures> ventures = HibernateUtil.getVentureBatch(ids.toString().substring(0, ids.toString().length()-1));
+       		return Response.ok(ventures).header("Access-Control-Allow-Origin", "*").build();
+    	}else{
+    		return Response.status(Response.Status.NO_CONTENT).entity("Could not find any top 20.").header("Access-Control-Allow-Origin", "*").build();
+    	}        
+    }
+	
 	@GET
     @Path("/top100/lists")
     @Produces(MediaType.APPLICATION_JSON)
@@ -176,6 +201,20 @@ public class RestService {
     }
 	
 	@GET
+    @Path("/batch/lists")
+    @Produces(MediaType.APPLICATION_JSON)
+    @Formatted
+    public Response getBatchLists() {
+
+    	List<BatchList> batchlist = HibernateUtil.getBatchLists();
+       	if(!batchlist.isEmpty()){
+       		return Response.ok(batchlist).header("Access-Control-Allow-Origin", "*").build();
+    	}else{
+    		return Response.status(Response.Status.NO_CONTENT).entity("Could not find any top 20 lists.").header("Access-Control-Allow-Origin", "*").build();
+    	}        
+    }
+	
+	@GET
     @Path("/top100/archived")
     @Produces(MediaType.APPLICATION_JSON)
     @Formatted
@@ -198,6 +237,20 @@ public class RestService {
     	List<Top20List> top20list = HibernateUtil.getTop20ListsArchived();
        	if(!top20list.isEmpty()){
        		return Response.ok(top20list).header("Access-Control-Allow-Origin", "*").build();
+    	}else{
+    		return Response.status(Response.Status.NO_CONTENT).entity("Could not find any archived top 20 lists.").header("Access-Control-Allow-Origin", "*").build();
+    	}        
+    }
+	
+	@GET
+    @Path("/batch/archived")
+    @Produces(MediaType.APPLICATION_JSON)
+    @Formatted
+    public Response getBatchListsArchived() {
+
+    	List<BatchList> batchlist = HibernateUtil.getBatchListsArchived();
+       	if(!batchlist.isEmpty()){
+       		return Response.ok(batchlist).header("Access-Control-Allow-Origin", "*").build();
     	}else{
     		return Response.status(Response.Status.NO_CONTENT).entity("Could not find any archived top 20 lists.").header("Access-Control-Allow-Origin", "*").build();
     	}        
@@ -266,6 +319,37 @@ public class RestService {
 	}
 	
 	@POST
+	@Path("/batch/delete")
+	@Consumes("application/json")
+	@Produces("application/json")
+	@Formatted
+    public Response deleteFromBatch(String json){
+		//log.info("Delete from top 20 path param:"+ id);
+		JSONObject body = new JSONObject(json);
+		int id = body.getInt("id");
+		String listName = body.getString("listName");
+		Batch deleteMe = HibernateUtil.getBatch(id, listName);
+		if(deleteMe == null){
+			return Response.status(Constants.HTTPCodes.BAD_REQUEST).entity("Could not delete top 20!").header("Access-Control-Allow-Origin", "*").build();
+		}
+		List<Batch> batchlist = HibernateUtil.getAllBatch(listName);
+		for(int i = deleteMe.getOrder(); i < batchlist.size(); i++){
+	    	Batch tmp = batchlist.get(i);
+	    	tmp.setOrder(tmp.getOrder()-1);
+	    	batchlist.set(i-1, tmp);
+	    }
+		batchlist.remove(batchlist.size()-1);
+		Ventures venture = HibernateUtil.getVenture(id);
+		venture.removeBatch(deleteMe);
+		HibernateUtil.updateVenture(venture);
+	    for(Batch list : batchlist){
+	    	HibernateUtil.updateBatch(list);
+	    }
+		return Response.ok(deleteMe).header("Access-Control-Allow-Origin", "*").build();
+		
+	}
+	
+	@POST
     @Path("/top100/move")
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
@@ -278,7 +362,7 @@ public class RestService {
 		Top100 current = HibernateUtil.getTop100(body.getInt("id"), body.getString("listName"));
 		int order = body.getInt("order");
 		List<Top100> top100list = HibernateUtil.getAllTop100(body.getString("listName"));
-		if(order < 1 || order > 100 || order == current.getOrder() || order > top100list.size()){
+		if(order < 1 || order > 200 || order == current.getOrder() || order > top100list.size()){
 			ObjectMapper mapper = new ObjectMapper();
 			String jsonInString = mapper.writeValueAsString("The order value "+order+" is not valid! Please try again.");
 			//log.info(jsonInString);
@@ -318,7 +402,7 @@ public class RestService {
 		Top20 current = HibernateUtil.getTop20(body.getInt("id"), body.getString("listName"));
 		int order = body.getInt("order");
 		List<Top20> top20list = HibernateUtil.getAllTop20(body.getString("listName"));
-		if(order < 1 || order > 100 || order == current.getOrder() || order > top20list.size()){
+		if(order < 1 || order > 20 || order == current.getOrder() || order > top20list.size()){
 			ObjectMapper mapper = new ObjectMapper();
 			String jsonInString = mapper.writeValueAsString("The order value "+order+" is not valid! Please try again.");
 			//log.info(jsonInString);
@@ -340,6 +424,46 @@ public class RestService {
 	    top20list.add(order-1, current);
 	    for(Top20 list : top20list){
 	    	HibernateUtil.updateTop20(list);
+	    }
+		
+		return Response.ok(current).header("Access-Control-Allow-Origin", "*").build();
+	}
+	
+	@POST
+    @Path("/batch/move")
+    @Consumes(MediaType.APPLICATION_JSON)
+    @Produces(MediaType.APPLICATION_JSON)
+    @Formatted
+    public Response moveBatch(String json) throws JsonGenerationException, JsonMappingException, IOException {
+		
+		//log.info("JSON body:"+ json);
+		JSONObject body = new JSONObject(json);
+		
+		Batch current = HibernateUtil.getBatch(body.getInt("id"), body.getString("listName"));
+		int order = body.getInt("order");
+		List<Batch> batchlist = HibernateUtil.getAllBatch(body.getString("listName"));
+		if(order < 1 || order > 100 || order == current.getOrder() || order > batchlist.size()){
+			ObjectMapper mapper = new ObjectMapper();
+			String jsonInString = mapper.writeValueAsString("The order value "+order+" is not valid! Please try again.");
+			//log.info(jsonInString);
+			return Response.status(Constants.HTTPCodes.BAD_REQUEST).entity(jsonInString).header("Access-Control-Allow-Origin", "*").build();	
+		}
+		
+	    for(int i = current.getOrder(); i < batchlist.size(); i++){
+	    	Batch tmp = batchlist.get(i);
+	    	tmp.setOrder(tmp.getOrder()-1);
+	    	batchlist.set(i-1, tmp);
+	    }
+	    batchlist.remove(batchlist.size()-1);
+	    for(int i = order - 1 ; i < batchlist.size(); i++){
+	    	Batch tmp = batchlist.get(i);
+	    	tmp.setOrder(tmp.getOrder()+1);
+	    	batchlist.set(i, tmp);
+	    } 
+	    current.setOrder(order);
+	    batchlist.add(order-1, current);
+	    for(Batch list : batchlist){
+	    	HibernateUtil.updateBatch(list);
 	    }
 		
 		return Response.ok(current).header("Access-Control-Allow-Origin", "*").build();
@@ -385,7 +509,7 @@ public class RestService {
 		log.info("JSON body:"+ json);
 		JSONObject body = new JSONObject(json);
 		List<Top100> top100list = HibernateUtil.getAllTop100(body.getString("listName"));
-		if(top100list.size()==100){
+		if(top100list.size()==200){
 			return Response.status(Status.PARTIAL_CONTENT).entity(Constants.GenericErrorMessages.EXCEEDED_SIZE).header("Access-Control-Allow-Origin", "*").build();
 		}
 		//Check to see if part of top100 already
@@ -429,6 +553,34 @@ public class RestService {
 		venture.addTop20(top20);
 		HibernateUtil.updateVenture(venture);
 		return Response.ok(top20).header("Access-Control-Allow-Origin", "*").build();
+	}
+	
+	@POST
+    @Path("/ventures/addbatch")
+    @Consumes(MediaType.APPLICATION_JSON)
+    @Produces(MediaType.APPLICATION_JSON)
+    @Formatted
+    public Response addBatch(String json) throws JsonGenerationException, JsonMappingException, IOException {
+		
+		//log.info("JSON body:"+ json);
+		JSONObject body = new JSONObject(json);
+		List<Batch> batchlist = HibernateUtil.getAllBatch(body.getString("listName"));
+		if(batchlist.size()==20){
+			return Response.status(Status.PARTIAL_CONTENT).entity(Constants.GenericErrorMessages.EXCEEDED_SIZE).header("Access-Control-Allow-Origin", "*").build();
+		}
+		//Check to see if part of top100 already
+		if(HibernateUtil.getBatch(body.getInt("id"), body.getString("listName")) != null){
+			return Response.status(Status.NO_CONTENT).entity("Batch venture with id "+body.getInt("id")+" already exists in list "+body.getString("listName")+"!").header("Access-Control-Allow-Origin", "*").build();
+		}
+		Batch batch = new Batch();
+		batch.setOrder(batchlist.size()+1);
+		batch.setVenture_id(body.getInt("id"));
+		batch.setListName(body.getString("listName"));
+		HibernateUtil.addBatch(batch);
+		Ventures venture = HibernateUtil.getVenture(body.getInt("id"));
+		venture.addBatch(batch);
+		HibernateUtil.updateVenture(venture);
+		return Response.ok(batch).header("Access-Control-Allow-Origin", "*").build();
 	}
 	
 	@POST
@@ -480,6 +632,30 @@ public class RestService {
 	}
 	
 	@POST
+    @Path("/batch/newlist")
+    @Consumes(MediaType.APPLICATION_JSON)
+    @Produces(MediaType.APPLICATION_JSON)
+    @Formatted
+    public Response newBatchList(String json) throws JsonGenerationException, JsonMappingException, IOException {
+		
+		//log.info("JSON body:"+ json);
+		JSONObject body = new JSONObject(json);
+
+		//Check to see if part of top20 already
+		if(HibernateUtil.getBatchListByName(body.getString("listName")) != null){
+			ObjectMapper mapper = new ObjectMapper();
+			return Response.status(Constants.HTTPCodes.BAD_REQUEST).entity(mapper.writeValueAsString("Batch list with id "+body.getString("listName")+" already exists!")).header("Access-Control-Allow-Origin", "*").build();
+		}
+		BatchList batchlist = new BatchList();
+		batchlist.setListName(body.getString("listName"));
+		batchlist.setArchive(new Boolean(false));
+		batchlist.setTime(new Date());
+		batchlist = HibernateUtil.addBatchList(batchlist);
+
+		return Response.ok(batchlist).header("Access-Control-Allow-Origin", "*").build();
+	}
+	
+	@POST
     @Path("/top100/archivelist")
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
@@ -516,6 +692,24 @@ public class RestService {
 	}
 	
 	@POST
+    @Path("/batch/archivelist")
+    @Consumes(MediaType.APPLICATION_JSON)
+    @Produces(MediaType.APPLICATION_JSON)
+    @Formatted
+    public Response archiveBatchList(String json) throws JsonGenerationException, JsonMappingException, IOException {
+		
+		//log.info("JSON body:"+ json);
+		JSONObject body = new JSONObject(json);
+
+		BatchList batchlist = HibernateUtil.getBatchList(body.getInt("id"));
+
+		batchlist.setArchive(new Boolean(true));
+		HibernateUtil.updateBatchList(batchlist);
+
+		return Response.ok(batchlist).header("Access-Control-Allow-Origin", "*").build();
+	}
+	
+	@POST
     @Path("/top100/unarchivelist")
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
@@ -549,6 +743,24 @@ public class RestService {
 		HibernateUtil.updateTop20List(top20list);
 
 		return Response.ok(top20list).header("Access-Control-Allow-Origin", "*").build();
+	}
+	
+	@POST
+    @Path("/batch/unarchivelist")
+    @Consumes(MediaType.APPLICATION_JSON)
+    @Produces(MediaType.APPLICATION_JSON)
+    @Formatted
+    public Response unarchiveBatchList(String json) throws JsonGenerationException, JsonMappingException, IOException {
+		
+		log.info("JSON body:"+ json);
+		JSONObject body = new JSONObject(json);
+
+		BatchList batchlist = HibernateUtil.getBatchList(body.getInt("id"));
+
+		batchlist.setArchive(new Boolean(false));
+		HibernateUtil.updateBatchList(batchlist);
+
+		return Response.ok(batchlist).header("Access-Control-Allow-Origin", "*").build();
 	}
 	
 	@POST
@@ -702,7 +914,7 @@ public class RestService {
 			return Response.status(Status.NO_CONTENT).entity("Failed to update startup logo!").header("Access-Control-Allow-Origin", "*").build();
 			
 		}
-		
+
 		return Response.ok(venture).header("Access-Control-Allow-Origin", "*").build();
 	}
 	
@@ -877,7 +1089,10 @@ public class RestService {
 		String caseStudy = "";
 		String comments = "";
 		String tags = "";
-		//String materials = "";
+		String materials = "";
+		String logo = "";
+		BufferedImage originalImage = null;
+		String logo_url = null;
 		
 		for (int i = 0; i < fields.length(); i++) {
 			if(fields.getJSONObject(i).getString("title").contains("Select some tags")){
@@ -946,13 +1161,24 @@ public class RestService {
 			if(fields.getJSONObject(i).getString("title").contains("Where is your HQ")){
 				location = fields.getJSONObject(i).getString("id");
 			}
+			if(fields.getJSONObject(i).getString("title").contains("Please upload your company materials")){
+				materials = fields.getJSONObject(i).getString("id");
+			}
+			if(fields.getJSONObject(i).getString("title").contains("Please upload your logo")){
+				logo = fields.getJSONObject(i).getString("id");
+			}
 		}
 		
 		for (int i = 0; i < answers.length(); i++) {
 			if(answers.getJSONObject(i).getJSONObject("field").getString("id").equals(tags)){
 				List<String> list = new ArrayList<String>();
-				for(int j = 0; j < answers.getJSONObject(i).getJSONObject("choices").getJSONArray("labels").length(); j++){
-				    list.add(answers.getJSONObject(i).getJSONObject("choices").getJSONArray("labels").getString(j));
+				if(!answers.getJSONObject(i).getJSONObject("choices").isNull("labels")){
+					for(int j = 0; j < answers.getJSONObject(i).getJSONObject("choices").getJSONArray("labels").length(); j++){
+					    list.add(answers.getJSONObject(i).getJSONObject("choices").getJSONArray("labels").getString(j));
+					}
+				}		
+				if(!answers.getJSONObject(i).getJSONObject("choices").isNull("other")){
+					list.add(answers.getJSONObject(i).getJSONObject("choices").getString("other"));	
 				}
 				venture.setTags(String.join(",",list));
 			}
@@ -1039,6 +1265,21 @@ public class RestService {
 			if(answers.getJSONObject(i).getJSONObject("field").getString("id").equals(location)){
 				venture.setLocation(answers.getJSONObject(i).getJSONObject("choice").getString("label"));
 			}
+			if(answers.getJSONObject(i).getJSONObject("field").getString("id").equals(materials)){
+				venture.setMaterials(answers.getJSONObject(i).getString("file_url"));
+			}
+			if(answers.getJSONObject(i).getJSONObject("field").getString("id").equals(logo)){
+				logo_url = answers.getJSONObject(i).getString("file_url");
+				try {
+					URL url = new URL(logo_url);
+					originalImage = ImageIO.read(url);
+					BufferedImage thumbnail = Thumbnails.of(originalImage).size(100, 100).asBufferedImage();
+					venture.setThumbnail(thumbnail, logo_url.substring(logo_url.lastIndexOf(".")+1, logo_url.length()));
+				} catch (IOException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
+			}
 		}
 		SimpleDateFormat sdf = new SimpleDateFormat("MM/dd/yyyy HH:mm:ss");
 		Timestamp time = new Timestamp(System.currentTimeMillis());
@@ -1046,6 +1287,17 @@ public class RestService {
 		venture.setUpdated(new Date());
 
 		venture = HibernateUtil.newVenture(venture);
+		if(logo_url != null){
+			try {
+			    // retrieve image
+			    File outputfile = new File("/tmp/images/startups/"+venture.getId()+logo_url.substring(logo_url.lastIndexOf("."), logo_url.length()));
+			    ImageIO.write(originalImage, logo_url.substring(logo_url.lastIndexOf(".")+1), outputfile);
+			} catch (IOException e) {
+				e.printStackTrace();
+			}                      
+		}
+		
+		
 		return Response.ok(venture).header("Access-Control-Allow-Origin", "*").build();
 		
 	}
