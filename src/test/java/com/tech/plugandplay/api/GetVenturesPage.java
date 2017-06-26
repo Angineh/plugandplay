@@ -13,8 +13,8 @@ import com.tech.plugandplay.util.CommonUtil;
 
 public class GetVenturesPage {
 	
-	static String hostname = "localhost";
-	static String query = "Mezi";
+	static String hostname = "playbook.pnptc.com";
+	static String query = "";
 	
 	@Test
 	public static void getActiveClusters(){

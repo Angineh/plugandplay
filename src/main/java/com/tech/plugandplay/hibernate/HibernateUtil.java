@@ -1143,12 +1143,12 @@ public class HibernateUtil {
 	     }
 	}
 	
-	public static BatchList getBatchListByName(String batchName) {
+	public static BatchList getBatchListByName(String listName) {
 		 Session session = SessionFactoryUtil.getSessionFactory().getCurrentSession();
 	     try {
 	     session.getTransaction().begin();
 	     @SuppressWarnings("rawtypes")
-		 List tmp = session.createCriteria(BatchList.class).add(Restrictions.eq("batchName", batchName)).list();
+		 List tmp = session.createCriteria(BatchList.class).add(Restrictions.eq("listName", listName)).list();
 	     session.getTransaction().commit();
 	     BatchList batchlist = new BatchList();
 	     if(!tmp.isEmpty()){
