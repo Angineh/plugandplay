@@ -11,18 +11,19 @@ import com.jayway.restassured.RestAssured;
 import com.jayway.restassured.http.ContentType;
 import com.jayway.restassured.response.Response;
 
-public class TypeFormTest {
+public class Verify {
 	
 	
 	@Test
 	public static void test() throws IOException {
-		/*String hostname = "54.145.172.103";*/
-		String hostname = "playbook.pnptc.com";
+		String api_key = "6a40a7bc-28ce-4ac9-94a5-c03ea6cb605e";
+		String hostname = "54.145.172.103";
+		/*String hostname = "playbook.pnptc.com";*/
 		/*String hostname = "localhost";*/
-		String content = new String(Files.readAllBytes(Paths.get("src/main/resources/json/typeform/recruitsumo.json")), StandardCharsets.UTF_8);
+		//String content = new String(Files.readAllBytes(Paths.get("src/main/resources/json/typeform/bangk.json")), StandardCharsets.UTF_8);
 		Response response = null;
 		//for(int i = 0; i < 100; i ++){
-		response = RestAssured.given().contentType(ContentType.JSON).body(content).post("http://"+hostname+":8080/plugandplay/api/v1/ventures/new");	
+		response = RestAssured.given().contentType(ContentType.JSON).post("http://"+hostname+":8080/plugandplay/api/v1/verify/"+api_key);	
 		//}
 		
 		

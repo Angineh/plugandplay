@@ -24,6 +24,7 @@ import com.tech.plugandplay.model.Top100;
 import com.tech.plugandplay.model.Top100List;
 import com.tech.plugandplay.model.Top20;
 import com.tech.plugandplay.model.Top20List;
+import com.tech.plugandplay.model.Users;
 import com.tech.plugandplay.model.Ventures;
 
 public class HibernateUtil {
@@ -1184,5 +1185,106 @@ public class HibernateUtil {
 	         log.fatal(e.getMessage(), e.fillInStackTrace());
 	         throw e;
 	     }
+	}
+	
+	public static List<Ventures> getVenturesByEmail(String email) {
+		 Session session = SessionFactoryUtil.getSessionFactory().getCurrentSession();
+	     try {
+	     session.getTransaction().begin();
+	     
+	     @SuppressWarnings("unchecked")
+		List<Ventures> ventures = session.createCriteria(Ventures.class).add(Restrictions.like("email", email)).list();
+	     session.getTransaction().commit();
+	     
+	     return ventures;
+	      
+	     } catch (RuntimeException e) {
+	         session.getTransaction().rollback();
+	         log.fatal(e.getMessage(), e.fillInStackTrace());
+	         return null;
+	     }
+	}
+	
+	public static Users newUser(Users user) {
+		Session session = SessionFactoryUtil.getSessionFactory().getCurrentSession();
+		try {
+			session.getTransaction().begin();
+			session.save(user);
+			session.getTransaction().commit();
+			return user;
+		  
+		} catch (RuntimeException e) {
+		     session.getTransaction().rollback();
+		     log.fatal(e.getMessage(), e.fillInStackTrace());
+		     throw e;
+		}
+	}
+	
+	public static List<Users> getUserByEmail(String email) {
+		 Session session = SessionFactoryUtil.getSessionFactory().getCurrentSession();
+	     try {
+	     session.getTransaction().begin();
+	     
+	     @SuppressWarnings("unchecked")
+		List<Users> users = session.createCriteria(Users.class).add(Restrictions.like("email", email)).list();
+	     session.getTransaction().commit();
+	     
+	     return users;
+	      
+	     } catch (RuntimeException e) {
+	         session.getTransaction().rollback();
+	         log.fatal(e.getMessage(), e.fillInStackTrace());
+	         return null;
+	     }
+	}
+	
+	public static Users getUserById(int id) {
+		 Session session = SessionFactoryUtil.getSessionFactory().getCurrentSession();
+	     try {
+	     session.getTransaction().begin();
+	     
+	     @SuppressWarnings("unchecked")
+		 Users user = (Users) session.get(Users.class, id);
+	     session.getTransaction().commit();
+	     
+	     return user;
+	      
+	     } catch (RuntimeException e) {
+	         session.getTransaction().rollback();
+	         log.fatal(e.getMessage(), e.fillInStackTrace());
+	         return null;
+	     }
+	}
+	
+	public static List<Users> getUserByApiKey(String api_key) {
+		 Session session = SessionFactoryUtil.getSessionFactory().getCurrentSession();
+	     try {
+	     session.getTransaction().begin();
+	     
+	     @SuppressWarnings("unchecked")
+	     List<Users> users = session.createCriteria(Users.class).add(Restrictions.like("api_key", api_key)).list();
+	     session.getTransaction().commit();
+	     
+	     return users;
+	      
+	     } catch (RuntimeException e) {
+	         session.getTransaction().rollback();
+	         log.fatal(e.getMessage(), e.fillInStackTrace());
+	         return null;
+	     }
+	}
+	public static Users updateUser(Users user) {
+		Session session = SessionFactoryUtil.getSessionFactory().getCurrentSession();
+		try {
+			session.getTransaction().begin();
+			session.update(user);
+			session.getTransaction().commit();
+			return user;
+		  
+		} catch (RuntimeException e) {
+		     session.getTransaction().rollback();
+		     log.fatal(e.getMessage(), e.fillInStackTrace());
+		     throw e;
+		}
 	}
 }

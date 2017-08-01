@@ -1,10 +1,13 @@
 package com.tech.plugandplay.api;
 
+import java.awt.color.CMMException;
 import java.awt.image.BufferedImage;
+import java.awt.image.renderable.ParameterBlock;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.UnsupportedEncodingException;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.sql.Timestamp;
@@ -14,8 +17,18 @@ import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
+import java.util.Properties;
+import java.util.UUID;
 
 import javax.imageio.ImageIO;
+import javax.mail.Message;
+import javax.mail.MessagingException;
+import javax.mail.PasswordAuthentication;
+import javax.mail.Session;
+import javax.mail.Transport;
+import javax.mail.internet.InternetAddress;
+import javax.mail.internet.MimeMessage;
+import javax.media.jai.JAI;
 import javax.persistence.Column;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
@@ -34,8 +47,12 @@ import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
 
+import org.apache.commons.io.FileUtils;
+import org.apache.commons.io.FilenameUtils;
+import org.apache.commons.lang.RandomStringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.apache.sanselan.ImageReadException;
 import org.codehaus.jackson.JsonGenerationException;
 import org.codehaus.jackson.map.JsonMappingException;
 import org.codehaus.jackson.map.ObjectMapper;
@@ -53,8 +70,13 @@ import com.tech.plugandplay.model.Top100;
 import com.tech.plugandplay.model.Top100List;
 import com.tech.plugandplay.model.Top20;
 import com.tech.plugandplay.model.Top20List;
+import com.tech.plugandplay.model.Users;
 import com.tech.plugandplay.model.Ventures;
+import com.tech.plugandplay.util.CommonUtil;
 import com.tech.plugandplay.util.Constants;
+import com.tech.plugandplay.util.Crypto;
+import com.tech.plugandplay.util.JpegReader;
+import com.twelvemonkeys.io.FileSeekableStream;
 
 import net.coobird.thumbnailator.Thumbnails;
 
@@ -1093,6 +1115,8 @@ public class RestService {
 		String logo = "";
 		BufferedImage originalImage = null;
 		String logo_url = null;
+		String extension = "";
+		Boolean canRead = new Boolean(true);
 		
 		for (int i = 0; i < fields.length(); i++) {
 			if(fields.getJSONObject(i).getString("title").contains("Select some tags")){
@@ -1143,7 +1167,7 @@ public class RestService {
 			if(fields.getJSONObject(i).getString("title").contains("Blurb")){
 				blurb = fields.getJSONObject(i).getString("id");
 			}
-			if(fields.getJSONObject(i).getString("title").contains("Closest competition")){
+			if(fields.getJSONObject(i).getString("title").contains("Closest competitor")){
 				competition = fields.getJSONObject(i).getString("id");
 			}
 			if(fields.getJSONObject(i).getString("title").contains("end customer")){
@@ -1270,14 +1294,29 @@ public class RestService {
 			}
 			if(answers.getJSONObject(i).getJSONObject("field").getString("id").equals(logo)){
 				logo_url = answers.getJSONObject(i).getString("file_url");
-				try {
-					URL url = new URL(logo_url);
-					originalImage = ImageIO.read(url);
-					BufferedImage thumbnail = Thumbnails.of(originalImage).size(100, 100).asBufferedImage();
-					venture.setThumbnail(thumbnail, logo_url.substring(logo_url.lastIndexOf(".")+1, logo_url.length()));
-				} catch (IOException e) {
-					// TODO Auto-generated catch block
-					e.printStackTrace();
+				extension = FilenameUtils.getExtension(logo_url);
+				if(extension.equalsIgnoreCase("jpg") || extension.equalsIgnoreCase("jpeg") || extension.equalsIgnoreCase("png") || extension.equalsIgnoreCase("bmp") || extension.equalsIgnoreCase("wbmp") || extension.equalsIgnoreCase("gif")){
+					try {
+						URL url = new URL(logo_url);
+	/*					File file = CommonUtil.readURLWriteFile(url);
+						String imageType = CommonUtil.getImageType(file);
+						originalImage = JpegReader.readImage(file);*/
+						try{
+						originalImage = ImageIO.read(url);
+						} catch(CMMException ce) {
+						File destination = CommonUtil.readURLWriteFile(url);
+						FileSeekableStream seekableStream = new FileSeekableStream(destination);
+						ParameterBlock pb = new ParameterBlock();
+						pb.add(seekableStream);
+						originalImage = JAI.create("jpeg", pb).getAsBufferedImage();
+						}
+						BufferedImage thumbnail = Thumbnails.of(originalImage).size(100, 100).asBufferedImage();
+						venture.setThumbnail(thumbnail, logo_url.substring(logo_url.lastIndexOf(".")+1, logo_url.length()));
+					} catch (IOException e) {
+						// TODO Auto-generated catch block
+						e.printStackTrace();
+						canRead = new Boolean(false);
+					}
 				}
 			}
 		}
@@ -1287,7 +1326,7 @@ public class RestService {
 		venture.setUpdated(new Date());
 
 		venture = HibernateUtil.newVenture(venture);
-		if(logo_url != null){
+		if((extension.equalsIgnoreCase("jpg") || extension.equalsIgnoreCase("jpeg") || extension.equalsIgnoreCase("png") || extension.equalsIgnoreCase("bmp") || extension.equalsIgnoreCase("wbmp") || extension.equalsIgnoreCase("gif"))&&(canRead == true)){
 			try {
 			    // retrieve image
 			    File outputfile = new File("/tmp/images/startups/"+venture.getId()+logo_url.substring(logo_url.lastIndexOf("."), logo_url.length()));
@@ -1345,4 +1384,211 @@ public class RestService {
     		return Response.status(Response.Status.NO_CONTENT).entity("Could not find any companies.").header("Access-Control-Allow-Origin", "*").build();
     	}        
     }
+	
+	@POST
+    @Path("/register")
+    @Consumes(MediaType.APPLICATION_JSON)
+    @Produces(MediaType.APPLICATION_JSON)
+    @Formatted
+    public Response register(String json) {
+		
+		JSONObject body = new JSONObject(json);		
+		String name = body.getString("name");
+		String email = body.getString("email");
+		String password = body.getString("password");
+		String api_key = "";
+		String emailpass = "";
+		Users user = new Users();
+		List<Users> check = HibernateUtil.getUserByEmail(email);
+		if(!check.isEmpty()){
+			return Response.status(Response.Status.PARTIAL_CONTENT).entity("Your email address is already registered.").header("Access-Control-Allow-Origin", "*").build();
+		}		
+		List<Ventures> list = HibernateUtil.getVenturesByEmail(email);
+		UUID uniqueKey = UUID.randomUUID();
+		user.setName(name);
+		user.setEmail(email);
+		user.setApi_key(uniqueKey.toString());
+		user.setVerified(new Boolean(false));
+		user.setTime(new Date());
+		if(body.has("api_key")){
+			api_key = body.getString("api_key");
+		}		
+		//Different roles are: admin, user, startup, corporation
+		if(api_key.equals("f7d624c2-f89e-40b9-9e4b-ff2db471a998")){
+			// This mean an administrator is trying to add a user.
+			user.setRole("user");
+			user.setRef_id(0);
+			String pass = RandomStringUtils.randomAlphanumeric(8);
+			user.setPassword(Crypto.getHash(pass));
+			emailpass = "<p style=\"padding-top: 10px;font-size:12px;color:black;\">Your temporary password is: "+pass+"</p>";
+		}else if (!list.isEmpty()){
+			Ventures venture = list.get(0);
+			user.setRef_id(venture.getId());
+			user.setRole("startup");
+			user.setPassword(Crypto.getHash(password));
+		} else{
+			//TODO check to see if it is a corporate account
+			// email is not part of ventures;
+			// Return 204
+			return Response.status(Response.Status.NO_CONTENT).entity("Could not register your email. Please contact a Plug and Play representative.").header("Access-Control-Allow-Origin", "*").build();
+		}
+		
+		user = HibernateUtil.newUser(user);
+		
+		final String username = "raj.desai@plugandplaytechcenter.com";
+		final String pass = "39Ven0710!";
+
+		Properties props = new Properties();
+		props.put("mail.smtp.auth", "true");
+		props.put("mail.smtp.starttls.enable", "true");
+		//props.put("mail.smtp.host", "smtp.gmail.com");
+		props.put("mail.smtp.host", "west.exch024.serverdata.net");
+		props.put("mail.smtp.port", "587");
+
+		Session session = Session.getInstance(props,
+		  new javax.mail.Authenticator() {
+			protected PasswordAuthentication getPasswordAuthentication() {
+				return new PasswordAuthentication(username, pass);
+			}
+		  });
+
+		try {
+
+			Message message = new MimeMessage(session);
+			try {
+				message.setFrom(new InternetAddress("no-reply@plugandplaytechcenter.com", "Playbook"));
+			} catch (UnsupportedEncodingException e) {
+				// TODO Auto-generated catch block
+				return Response.status(Response.Status.NO_CONTENT).entity("Could not register your email. Please contact a Plug and Play representative.").header("Access-Control-Allow-Origin", "*").build();
+			}
+			String hostname = "playbook.pnptc.com";
+			/*String hostname = "54.145.172.103";*/
+			message.setRecipients(Message.RecipientType.TO,
+				InternetAddress.parse(user.getEmail()));
+			message.setSubject("Verify your Playbook email address");
+			message.setContent("<h3 style=\"padding-bottom: 10px;margin-bottom: 8px;margin-top: 5px;\">Welcome to Playbook "+user.getName()+"!</h3>"
+				+ "<a style=\"text-decoration:none;color: #fff;background:#3dd28d;border-radius: 4px;border: 0 none;font-size: 13px;padding: 10px;font-weight: bold;line-height: 1.0;font-family:sans-serif;box-shadow: 1px 1px 2px #888888;\" href=\"http://"+hostname+"/#/verify/"+ user.getApi_key()+"\">"			
+				+ "Activate your Account"
+				+ "</a>"
+				+ emailpass
+				+ "<p style=\"padding-top: 15px;font-size:10px;font-style: italic;color:black;\">Copyright © 2017 Plug and Play, LLC, All rights reserved.</p>"
+				, "text/html");
+
+			Transport.send(message);
+
+		} catch (MessagingException e) {
+			return Response.status(Response.Status.NO_CONTENT).entity("Could not register your email. Please contact a Plug and Play representative.").header("Access-Control-Allow-Origin", "*").build();
+		}
+		
+		return Response.ok(user).header("Access-Control-Allow-Origin", "*").build();
+	}
+	
+	@POST
+    @Path("/verify/{api_key}")
+    @Consumes(MediaType.APPLICATION_JSON)
+    @Produces(MediaType.APPLICATION_JSON)
+    @Formatted
+    public Response verify(@PathParam("api_key") String api_key) {
+		
+		
+		List<Users> query = HibernateUtil.getUserByApiKey(api_key);
+		if(query.isEmpty()){
+			return Response.status(Response.Status.NO_CONTENT).entity("Could not verify your email. Please contact a Plug and Play representative.").header("Access-Control-Allow-Origin", "*").build();
+		}else{
+			Users user = query.get(0);
+			user.setVerified(new Boolean(true));
+			HibernateUtil.updateUser(user);
+			return Response.ok().header("Access-Control-Allow-Origin", "*").build();
+		}
+		
+	}
+	
+	@POST
+    @Path("/login")
+    @Consumes(MediaType.APPLICATION_JSON)
+    @Produces(MediaType.APPLICATION_JSON)
+    @Formatted
+    public Response login(String json) {
+		
+		JSONObject body = new JSONObject(json);		
+		String email = body.getString("email");
+		String password = body.getString("password");
+		Users user = new Users();
+		List<Users> check = HibernateUtil.getUserByEmail(email);
+		if(check.isEmpty()){
+			return Response.status(Response.Status.NO_CONTENT).entity("You have entered an invalid username or password.").header("Access-Control-Allow-Origin", "*").build();
+		}
+		user = check.get(0);
+		
+		if(user.getPassword().equals(Crypto.getHash(password)) && user.isVerified()){
+			Users response = new Users();
+			response.setId(user.getId());
+			response.setName(user.getName());
+			response.setEmail(user.getEmail());
+			response.setPassword(user.getPassword());
+			response.setRole(user.getRole());
+			response.setRef_id(user.getRef_id());
+			response.setVerified(user.isVerified());
+			response.setToken(CommonUtil.createJWT(user.getName()));
+			return Response.ok(response).header("Access-Control-Allow-Origin", "*").build();
+		}else if(user.getPassword().equals(Crypto.getHash(password)) && !user.isVerified()) {
+			return Response.status(Response.Status.PARTIAL_CONTENT).entity("Please verify your email address before logging into Playbook.").header("Access-Control-Allow-Origin", "*").build();
+		}else{
+			return Response.status(Response.Status.NO_CONTENT).entity("You have entered an invalid username or password.").header("Access-Control-Allow-Origin", "*").build();
+		}
+	}
+	
+	@POST
+    @Path("/user/settings")
+    @Consumes(MediaType.APPLICATION_JSON)
+    @Produces(MediaType.APPLICATION_JSON)
+    @Formatted
+    public Response userSettings(String json) {
+		
+		JSONObject body = new JSONObject(json);
+		
+		Users user = HibernateUtil.getUserById(body.getInt("id"));
+		String name = body.getString("name");
+		String email = body.getString("email");
+		String password = body.getString("password");
+		
+		boolean nameChange = new Boolean(false);
+		boolean emailChange = new Boolean(false);
+		boolean passwordChange = new Boolean(false);
+		
+		if(user == null){
+			return Response.status(Status.NO_CONTENT).entity("Could not find user with id "+body.getInt("id")+" to update!").header("Access-Control-Allow-Origin", "*").build();
+		}else{
+			if(!name.equals(user.getName()) && !name.isEmpty()){
+				user.setName(name);
+			} else {
+				nameChange = new Boolean(true);
+			}
+			if(!email.equals(user.getEmail()) && !email.isEmpty()){
+				user.setEmail(email);				
+			} else {
+				emailChange = new Boolean(true);
+			}
+			if(!password.equals(user.getPassword()) && !password.isEmpty()){
+				user.setPassword(Crypto.getHash(password));
+			} else {
+				passwordChange = new Boolean(true);
+			}
+			
+			if(nameChange && emailChange && passwordChange){
+				return Response.status(Status.PARTIAL_CONTENT).entity("No changes detected.").header("Access-Control-Allow-Origin", "*").build();
+			}
+			user = HibernateUtil.updateUser(user);
+			Users response = new Users();
+			response.setId(user.getId());
+			response.setName(user.getName());
+			response.setEmail(user.getEmail());
+			response.setRole(user.getRole());
+			response.setRef_id(user.getRef_id());
+			response.setVerified(user.isVerified());
+			response.setPassword(user.getPassword());
+			return Response.ok(response).header("Access-Control-Allow-Origin", "*").build();
+		}
+		
+	}
 }

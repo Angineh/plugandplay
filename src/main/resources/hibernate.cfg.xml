@@ -29,5 +29,6 @@
   <mapping class="com.tech.plugandplay.model.Top20List"/>
   <mapping class="com.tech.plugandplay.model.Batch"/>
   <mapping class="com.tech.plugandplay.model.BatchList"/>
+  <mapping class="com.tech.plugandplay.model.Users"/>
 </session-factory>
 </hibernate-configuration>

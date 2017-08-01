@@ -62,7 +62,7 @@ public class Ventures implements Serializable {
 	@Column(name="VERTICALS")
 	private String verticals;
 	@Field(index=Index.YES, analyze=Analyze.YES, store=Store.NO)
-	@Column(name="WEBSITE")
+	@Column(name="WEBSITE", unique=true)
 	private String website;
 	@Field(index=Index.YES, analyze=Analyze.YES, store=Store.NO)
 	@Column(name="PNP_CONTACT")
