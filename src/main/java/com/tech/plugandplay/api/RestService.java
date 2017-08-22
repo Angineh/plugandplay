@@ -8,12 +8,10 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.UnsupportedEncodingException;
-import java.net.MalformedURLException;
 import java.net.URL;
 import java.sql.Timestamp;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
@@ -29,15 +27,9 @@ import javax.mail.Transport;
 import javax.mail.internet.InternetAddress;
 import javax.mail.internet.MimeMessage;
 import javax.media.jai.JAI;
-import javax.persistence.Column;
 import javax.ws.rs.Consumes;
-import javax.ws.rs.DELETE;
-import javax.ws.rs.DefaultValue;
-import javax.ws.rs.FormParam;
 import javax.ws.rs.GET;
-import javax.ws.rs.HeaderParam;
 import javax.ws.rs.POST;
-import javax.ws.rs.PUT;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
@@ -47,12 +39,10 @@ import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
 
-import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.lang.RandomStringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.apache.sanselan.ImageReadException;
 import org.codehaus.jackson.JsonGenerationException;
 import org.codehaus.jackson.map.JsonMappingException;
 import org.codehaus.jackson.map.ObjectMapper;
@@ -66,6 +56,8 @@ import com.tech.plugandplay.hibernate.HibernateUtil;
 import com.tech.plugandplay.model.Batch;
 import com.tech.plugandplay.model.BatchList;
 import com.tech.plugandplay.model.Business;
+import com.tech.plugandplay.model.Dealflow;
+import com.tech.plugandplay.model.DealflowList;
 import com.tech.plugandplay.model.Top100;
 import com.tech.plugandplay.model.Top100List;
 import com.tech.plugandplay.model.Top20;
@@ -75,7 +67,6 @@ import com.tech.plugandplay.model.Ventures;
 import com.tech.plugandplay.util.CommonUtil;
 import com.tech.plugandplay.util.Constants;
 import com.tech.plugandplay.util.Crypto;
-import com.tech.plugandplay.util.JpegReader;
 import com.twelvemonkeys.io.FileSeekableStream;
 
 import net.coobird.thumbnailator.Thumbnails;
@@ -174,6 +165,27 @@ public class RestService {
     }
 	
 	@POST
+    @Path("/dealflow/all")
+    @Produces(MediaType.APPLICATION_JSON)
+    @Formatted
+    public Response getDealflow(String json) {	
+		JSONObject body = new JSONObject(json);
+		String listName = body.getString("listName");
+    	List<Dealflow> dealflow = HibernateUtil.getAllDealflow(listName);
+       	if(!dealflow.isEmpty()){
+       		StringBuilder ids = new StringBuilder();
+       		for(Dealflow venture: dealflow){
+       			ids.append(venture.getVenture_id());
+       			ids.append(",");
+       		} 		
+       		List<Ventures> ventures = HibernateUtil.getVentureDealflow(ids.toString().substring(0, ids.toString().length()-1));
+       		return Response.ok(ventures).header("Access-Control-Allow-Origin", "*").build();
+    	}else{
+    		return Response.status(Response.Status.NO_CONTENT).entity("Could not find any dealflows.").header("Access-Control-Allow-Origin", "*").build();
+    	}        
+    }
+	
+	@POST
     @Path("/batch/all")
     @Produces(MediaType.APPLICATION_JSON)
     @Formatted
@@ -223,6 +235,20 @@ public class RestService {
     }
 	
 	@GET
+    @Path("/dealflow/lists")
+    @Produces(MediaType.APPLICATION_JSON)
+    @Formatted
+    public Response getDealflowLists() {
+
+    	List<DealflowList> dealflowlist = HibernateUtil.getDealflowLists();
+       	if(!dealflowlist.isEmpty()){
+       		return Response.ok(dealflowlist).header("Access-Control-Allow-Origin", "*").build();
+    	}else{
+    		return Response.status(Response.Status.NO_CONTENT).entity("Could not find any dealflow lists.").header("Access-Control-Allow-Origin", "*").build();
+    	}        
+    }
+	
+	@GET
     @Path("/batch/lists")
     @Produces(MediaType.APPLICATION_JSON)
     @Formatted
@@ -261,6 +287,20 @@ public class RestService {
        		return Response.ok(top20list).header("Access-Control-Allow-Origin", "*").build();
     	}else{
     		return Response.status(Response.Status.NO_CONTENT).entity("Could not find any archived top 20 lists.").header("Access-Control-Allow-Origin", "*").build();
+    	}        
+    }
+	
+	@GET
+    @Path("/dealflow/archived")
+    @Produces(MediaType.APPLICATION_JSON)
+    @Formatted
+    public Response getDealflowListsArchived() {
+
+    	List<DealflowList> dealflowlist = HibernateUtil.getDealflowListsArchived();
+       	if(!dealflowlist.isEmpty()){
+       		return Response.ok(dealflowlist).header("Access-Control-Allow-Origin", "*").build();
+    	}else{
+    		return Response.status(Response.Status.NO_CONTENT).entity("Could not find any archived dealflow lists.").header("Access-Control-Allow-Origin", "*").build();
     	}        
     }
 	
@@ -335,6 +375,37 @@ public class RestService {
 		HibernateUtil.updateVenture(venture);
 	    for(Top20 list : top20list){
 	    	HibernateUtil.updateTop20(list);
+	    }
+		return Response.ok(deleteMe).header("Access-Control-Allow-Origin", "*").build();
+		
+	}
+	
+	@POST
+	@Path("/dealflow/delete")
+	@Consumes("application/json")
+	@Produces("application/json")
+	@Formatted
+    public Response deleteFromDealflow(String json){
+		//log.info("Delete from top 20 path param:"+ id);
+		JSONObject body = new JSONObject(json);
+		int id = body.getInt("id");
+		String listName = body.getString("listName");
+		Dealflow deleteMe = HibernateUtil.getDealflow(id, listName);
+		if(deleteMe == null){
+			return Response.status(Constants.HTTPCodes.BAD_REQUEST).entity("Could not delete dealflow!").header("Access-Control-Allow-Origin", "*").build();
+		}
+		List<Dealflow> dealflowlist = HibernateUtil.getAllDealflow(listName);
+		for(int i = deleteMe.getOrder(); i < dealflowlist.size(); i++){
+			Dealflow tmp = dealflowlist.get(i);
+	    	tmp.setOrder(tmp.getOrder()-1);
+	    	dealflowlist.set(i-1, tmp);
+	    }
+		dealflowlist.remove(dealflowlist.size()-1);
+		Ventures venture = HibernateUtil.getVenture(id);
+		venture.removeDealflow(deleteMe);
+		HibernateUtil.updateVenture(venture);
+	    for(Dealflow list : dealflowlist){
+	    	HibernateUtil.updateDealflow(list);
 	    }
 		return Response.ok(deleteMe).header("Access-Control-Allow-Origin", "*").build();
 		
@@ -452,6 +523,46 @@ public class RestService {
 	}
 	
 	@POST
+    @Path("/dealflow/move")
+    @Consumes(MediaType.APPLICATION_JSON)
+    @Produces(MediaType.APPLICATION_JSON)
+    @Formatted
+    public Response moveDealflow(String json) throws JsonGenerationException, JsonMappingException, IOException {
+		
+		//log.info("JSON body:"+ json);
+		JSONObject body = new JSONObject(json);
+		
+		Dealflow current = HibernateUtil.getDealflow(body.getInt("id"), body.getString("listName"));
+		int order = body.getInt("order");
+		List<Dealflow> dealflowlist = HibernateUtil.getAllDealflow(body.getString("listName"));
+		if(order < 1 || order > 20 || order == current.getOrder() || order > dealflowlist.size()){
+			ObjectMapper mapper = new ObjectMapper();
+			String jsonInString = mapper.writeValueAsString("The order value "+order+" is not valid! Please try again.");
+			//log.info(jsonInString);
+			return Response.status(Constants.HTTPCodes.BAD_REQUEST).entity(jsonInString).header("Access-Control-Allow-Origin", "*").build();	
+		}
+		
+	    for(int i = current.getOrder(); i < dealflowlist.size(); i++){
+	    	Dealflow tmp = dealflowlist.get(i);
+	    	tmp.setOrder(tmp.getOrder()-1);
+	    	dealflowlist.set(i-1, tmp);
+	    }
+	    dealflowlist.remove(dealflowlist.size()-1);
+	    for(int i = order - 1 ; i < dealflowlist.size(); i++){
+	    	Dealflow tmp = dealflowlist.get(i);
+	    	tmp.setOrder(tmp.getOrder()+1);
+	    	dealflowlist.set(i, tmp);
+	    } 
+	    current.setOrder(order);
+	    dealflowlist.add(order-1, current);
+	    for(Dealflow list : dealflowlist){
+	    	HibernateUtil.updateDealflow(list);
+	    }
+		
+		return Response.ok(current).header("Access-Control-Allow-Origin", "*").build();
+	}
+	
+	@POST
     @Path("/batch/move")
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
@@ -559,7 +670,7 @@ public class RestService {
 		//log.info("JSON body:"+ json);
 		JSONObject body = new JSONObject(json);
 		List<Top20> top20list = HibernateUtil.getAllTop20(body.getString("listName"));
-		if(top20list.size()==20){
+		if(top20list.size()==50){
 			return Response.status(Status.PARTIAL_CONTENT).entity(Constants.GenericErrorMessages.EXCEEDED_SIZE).header("Access-Control-Allow-Origin", "*").build();
 		}
 		//Check to see if part of top100 already
@@ -575,6 +686,34 @@ public class RestService {
 		venture.addTop20(top20);
 		HibernateUtil.updateVenture(venture);
 		return Response.ok(top20).header("Access-Control-Allow-Origin", "*").build();
+	}
+	
+	@POST
+    @Path("/ventures/adddealflow")
+    @Consumes(MediaType.APPLICATION_JSON)
+    @Produces(MediaType.APPLICATION_JSON)
+    @Formatted
+    public Response addDealflow(String json) throws JsonGenerationException, JsonMappingException, IOException {
+		
+		//log.info("JSON body:"+ json);
+		JSONObject body = new JSONObject(json);
+		List<Dealflow> dealflowlist = HibernateUtil.getAllDealflow(body.getString("listName"));
+		if(dealflowlist.size()==20){
+			return Response.status(Status.PARTIAL_CONTENT).entity(Constants.GenericErrorMessages.EXCEEDED_SIZE).header("Access-Control-Allow-Origin", "*").build();
+		}
+		//Check to see if part of top100 already
+		if(HibernateUtil.getDealflow(body.getInt("id"), body.getString("listName")) != null){
+			return Response.status(Status.NO_CONTENT).entity("Dealflow venture with id "+body.getInt("id")+" already exists in list "+body.getString("listName")+"!").header("Access-Control-Allow-Origin", "*").build();
+		}
+		Dealflow dealflow = new Dealflow();
+		dealflow.setOrder(dealflowlist.size()+1);
+		dealflow.setVenture_id(body.getInt("id"));
+		dealflow.setListName(body.getString("listName"));
+		HibernateUtil.addDealflow(dealflow);
+		Ventures venture = HibernateUtil.getVenture(body.getInt("id"));
+		venture.addDealflow(dealflow);
+		HibernateUtil.updateVenture(venture);
+		return Response.ok(dealflow).header("Access-Control-Allow-Origin", "*").build();
 	}
 	
 	@POST
@@ -654,6 +793,30 @@ public class RestService {
 	}
 	
 	@POST
+    @Path("/dealflow/newlist")
+    @Consumes(MediaType.APPLICATION_JSON)
+    @Produces(MediaType.APPLICATION_JSON)
+    @Formatted
+    public Response newDealflowList(String json) throws JsonGenerationException, JsonMappingException, IOException {
+		
+		//log.info("JSON body:"+ json);
+		JSONObject body = new JSONObject(json);
+
+		//Check to see if part of top20 already
+		if(HibernateUtil.getDealflowListByName(body.getString("listName")) != null){
+			ObjectMapper mapper = new ObjectMapper();
+			return Response.status(Constants.HTTPCodes.BAD_REQUEST).entity(mapper.writeValueAsString("Top 20 list with id "+body.getString("listName")+" already exists!")).header("Access-Control-Allow-Origin", "*").build();
+		}
+		DealflowList dealflowlist = new DealflowList();
+		dealflowlist.setListName(body.getString("listName"));
+		dealflowlist.setArchive(new Boolean(false));
+		dealflowlist.setTime(new Date());
+		dealflowlist = HibernateUtil.addDealflowList(dealflowlist);
+
+		return Response.ok(dealflowlist).header("Access-Control-Allow-Origin", "*").build();
+	}
+	
+	@POST
     @Path("/batch/newlist")
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
@@ -714,6 +877,24 @@ public class RestService {
 	}
 	
 	@POST
+    @Path("/dealflow/archivelist")
+    @Consumes(MediaType.APPLICATION_JSON)
+    @Produces(MediaType.APPLICATION_JSON)
+    @Formatted
+    public Response archiveDealflowList(String json) throws JsonGenerationException, JsonMappingException, IOException {
+		
+		//log.info("JSON body:"+ json);
+		JSONObject body = new JSONObject(json);
+
+		DealflowList dealflowlist = HibernateUtil.getDealflowList(body.getInt("id"));
+
+		dealflowlist.setArchive(new Boolean(true));
+		HibernateUtil.updateDealflowList(dealflowlist);
+
+		return Response.ok(dealflowlist).header("Access-Control-Allow-Origin", "*").build();
+	}
+	
+	@POST
     @Path("/batch/archivelist")
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
@@ -765,6 +946,24 @@ public class RestService {
 		HibernateUtil.updateTop20List(top20list);
 
 		return Response.ok(top20list).header("Access-Control-Allow-Origin", "*").build();
+	}
+	
+	@POST
+    @Path("/dealflow/unarchivelist")
+    @Consumes(MediaType.APPLICATION_JSON)
+    @Produces(MediaType.APPLICATION_JSON)
+    @Formatted
+    public Response unarchiveDealflowList(String json) throws JsonGenerationException, JsonMappingException, IOException {
+		
+		log.info("JSON body:"+ json);
+		JSONObject body = new JSONObject(json);
+
+		DealflowList dealflowlist = HibernateUtil.getDealflowList(body.getInt("id"));
+
+		dealflowlist.setArchive(new Boolean(false));
+		HibernateUtil.updateDealflowList(dealflowlist);
+
+		return Response.ok(dealflowlist).header("Access-Control-Allow-Origin", "*").build();
 	}
 	
 	@POST
@@ -1060,7 +1259,7 @@ public class RestService {
 		
 		log.info("JSON body:"+ json);
 		JSONObject body = new JSONObject(json);
-		JSONArray fields = body.getJSONObject("form_response").getJSONObject("definition").getJSONArray("fields");
+		//JSONArray fields = body.getJSONObject("form_response").getJSONObject("definition").getJSONArray("fields");
 		JSONArray answers = body.getJSONObject("form_response").getJSONArray("answers");
 		
 		Ventures venture = new Ventures();
@@ -1089,49 +1288,49 @@ public class RestService {
 		venture.setWebsite("");
 		venture.setPortfolio(new Boolean(false));
 		//String timestamp = null;
-		String companyName = "";
-		String blurb = "";
-		String verticals = "";
-		String website = "";
-		String pnpContact = "";
-		String contactName = "";
-		String email = "";
-		String phoneNumber = "";
-		String totalMoneyRaised = "";
-		String stage = "";
-		String b2bb2c = "";
-		String employees = "";
-		String location = "";
-		String city = "";
-		String competition = "";
-		String advantage = "";
-		String background = "";
-		String founded = "";
-		String partnerInterests = "";
-		String caseStudy = "";
-		String comments = "";
-		String tags = "";
-		String materials = "";
-		String logo = "";
+		String companyName = "32472198";
+		String blurb = "32472206";
+		String verticals = "32472221";
+		String website = "32472204";
+		String pnpContact = "39683158";
+		String contactName = "32472199";
+		String email = "32472205";
+		String phoneNumber = "32472200";
+		String totalMoneyRaised = "32472201";
+		String stage = "32472210";
+		String b2bb2c = "32472220";
+		String employees = "32474775";
+		String location = "32472211";
+		String city = "32472202";
+		String competition = "32472207";
+		String advantage = "32472208";
+		String background = "32472209";
+		String founded = "32472219";
+		String partnerInterests = "37990890";
+		String caseStudy = "32474974";
+		String comments = "32474976";
+		String tags = "33005691";
+		String materials = "32472224";
+		String logo = "50982627";
 		BufferedImage originalImage = null;
 		String logo_url = null;
 		String extension = "";
 		Boolean canRead = new Boolean(true);
 		
-		for (int i = 0; i < fields.length(); i++) {
+		/*for (int i = 0; i < fields.length(); i++) {
 			if(fields.getJSONObject(i).getString("title").contains("Select some tags")){
 				tags = fields.getJSONObject(i).getString("id");
 			}
 			if(fields.getJSONObject(i).getString("title").contains("Example of a case study")){
 				caseStudy = fields.getJSONObject(i).getString("id");
 			}
-			if(fields.getJSONObject(i).getString("title").contains("who from PnP")){
+			if(fields.getJSONObject(i).getString("title").contains("Who from Plug and Play")){
 				pnpContact = fields.getJSONObject(i).getString("id");
 			}
 			if(fields.getJSONObject(i).getString("title").contains("Name of Company")){
 				companyName = fields.getJSONObject(i).getString("id");
 			}
-			if(fields.getJSONObject(i).getString("title").contains("Website")){
+			if(fields.getJSONObject(i).getString("title").contains("Company website")){
 				website = fields.getJSONObject(i).getString("id");
 			}
 			if(fields.getJSONObject(i).getString("title").contains("Stage of Company")){
@@ -1146,13 +1345,13 @@ public class RestService {
 			if(fields.getJSONObject(i).getString("title").contains("Any other information or comments")){
 				comments = fields.getJSONObject(i).getString("id");
 			}
-			if(fields.getJSONObject(i).getString("title").contains("Email contact")){
+			if(fields.getJSONObject(i).getString("title").contains("Email for")){
 				email = fields.getJSONObject(i).getString("id");
 			}
 			if(fields.getJSONObject(i).getString("title").contains("Total Money Raised")){
 				totalMoneyRaised = fields.getJSONObject(i).getString("id");
 			}
-			if(fields.getJSONObject(i).getString("title").contains("Specify name of the Country")){
+			if(fields.getJSONObject(i).getString("title").contains("Specify Country and City of Headquarters")){
 				city = fields.getJSONObject(i).getString("id");
 			}
 			if(fields.getJSONObject(i).getString("title").contains("Competitive Advantage")){
@@ -1161,7 +1360,7 @@ public class RestService {
 			if(fields.getJSONObject(i).getString("title").contains("company founded")){
 				founded = fields.getJSONObject(i).getString("id");
 			}
-			if(fields.getJSONObject(i).getString("title").contains("Primary Contact")){
+			if(fields.getJSONObject(i).getString("title").contains("Name of primary contact")){
 				contactName = fields.getJSONObject(i).getString("id");
 			}
 			if(fields.getJSONObject(i).getString("title").contains("Blurb")){
@@ -1182,7 +1381,7 @@ public class RestService {
 			if(fields.getJSONObject(i).getString("title").contains("Number of Employees")){
 				employees = fields.getJSONObject(i).getString("id");
 			}
-			if(fields.getJSONObject(i).getString("title").contains("Where is your HQ")){
+			if(fields.getJSONObject(i).getString("title").contains("Where is your Headquarters?")){
 				location = fields.getJSONObject(i).getString("id");
 			}
 			if(fields.getJSONObject(i).getString("title").contains("Please upload your company materials")){
@@ -1191,7 +1390,7 @@ public class RestService {
 			if(fields.getJSONObject(i).getString("title").contains("Please upload your logo")){
 				logo = fields.getJSONObject(i).getString("id");
 			}
-		}
+		}*/
 		
 		for (int i = 0; i < answers.length(); i++) {
 			if(answers.getJSONObject(i).getJSONObject("field").getString("id").equals(tags)){
@@ -1326,6 +1525,201 @@ public class RestService {
 		venture.setUpdated(new Date());
 
 		venture = HibernateUtil.newVenture(venture);
+		if((extension.equalsIgnoreCase("jpg") || extension.equalsIgnoreCase("jpeg") || extension.equalsIgnoreCase("png") || extension.equalsIgnoreCase("bmp") || extension.equalsIgnoreCase("wbmp") || extension.equalsIgnoreCase("gif"))&&(canRead == true)){
+			try {
+			    // retrieve image
+			    File outputfile = new File("/tmp/images/startups/"+venture.getId()+logo_url.substring(logo_url.lastIndexOf("."), logo_url.length()));
+			    ImageIO.write(originalImage, logo_url.substring(logo_url.lastIndexOf(".")+1), outputfile);
+			} catch (IOException e) {
+				e.printStackTrace();
+			}                      
+		}
+		
+		
+		return Response.ok(venture).header("Access-Control-Allow-Origin", "*").build();
+		
+	}
+	
+	@POST
+    @Path("/ventures/newupdate")
+    @Consumes(MediaType.APPLICATION_JSON)
+    @Produces(MediaType.APPLICATION_JSON)
+    @Formatted
+    public Response newVentureUpdate(String json) {
+		
+		log.info("JSON body:"+ json);
+		JSONObject body = new JSONObject(json);
+		//JSONArray fields = body.getJSONObject("form_response").getJSONObject("definition").getJSONArray("fields");
+		JSONArray answers = body.getJSONObject("form_response").getJSONArray("answers");
+		
+
+		//String timestamp = null;
+		String companyName = "32472198";
+		String blurb = "32472206";
+		String verticals = "32472221";
+		String website = "32472204";
+		String pnpContact = "39683158";
+		String contactName = "32472199";
+		String email = "32472205";
+		String phoneNumber = "32472200";
+		String totalMoneyRaised = "32472201";
+		String stage = "32472210";
+		String b2bb2c = "32472220";
+		String employees = "32474775";
+		String location = "32472211";
+		String city = "32472202";
+		String competition = "32472207";
+		String advantage = "32472208";
+		String background = "32472209";
+		String founded = "32472219";
+		String partnerInterests = "37990890";
+		String caseStudy = "32474974";
+		String comments = "32474976";
+		String tags = "33005691";
+		String materials = "32472224";
+		String logo = "50982627";
+		BufferedImage originalImage = null;
+		String logo_url = null;
+		String extension = "";
+		Boolean canRead = new Boolean(true);
+		String nameQuery = null;
+		for (int i = 0; i < answers.length(); i++) {
+			if(answers.getJSONObject(i).getJSONObject("field").getString("id").equals(companyName)){
+				nameQuery = answers.getJSONObject(i).getString("text");
+			}
+		}
+		
+		Ventures venture = HibernateUtil.getVentureByCompanyName(nameQuery);
+		
+		for (int i = 0; i < answers.length(); i++) {
+			if(answers.getJSONObject(i).getJSONObject("field").getString("id").equals(tags)){
+				List<String> list = new ArrayList<String>();
+				if(!answers.getJSONObject(i).getJSONObject("choices").isNull("labels")){
+					for(int j = 0; j < answers.getJSONObject(i).getJSONObject("choices").getJSONArray("labels").length(); j++){
+					    list.add(answers.getJSONObject(i).getJSONObject("choices").getJSONArray("labels").getString(j));
+					}
+				}		
+				if(!answers.getJSONObject(i).getJSONObject("choices").isNull("other")){
+					list.add(answers.getJSONObject(i).getJSONObject("choices").getString("other"));	
+				}
+				venture.setTags(String.join(",",list));
+			}
+			if(answers.getJSONObject(i).getJSONObject("field").getString("id").equals(caseStudy)){
+				venture.setCaseStudy(answers.getJSONObject(i).getString("text"));
+			}
+			if(answers.getJSONObject(i).getJSONObject("field").getString("id").equals(pnpContact)){
+				venture.setPnpContact(answers.getJSONObject(i).getString("text"));
+			}
+			if(answers.getJSONObject(i).getJSONObject("field").getString("id").equals(companyName)){
+				venture.setCompanyName(answers.getJSONObject(i).getString("text"));
+			}
+			if(answers.getJSONObject(i).getJSONObject("field").getString("id").equals(website)){
+				venture.setWebsite(answers.getJSONObject(i).getString("url"));
+			}
+			if(answers.getJSONObject(i).getJSONObject("field").getString("id").equals(stage)){
+				venture.setStage(answers.getJSONObject(i).getJSONObject("choice").getString("label"));
+			}
+			if(answers.getJSONObject(i).getJSONObject("field").getString("id").equals(background)){
+				venture.setBackground(answers.getJSONObject(i).getString("text"));
+			}
+			if(answers.getJSONObject(i).getJSONObject("field").getString("id").equals(verticals)){
+				List<String> list = new ArrayList<String>();
+				if(!answers.getJSONObject(i).getJSONObject("choices").isNull("labels")){
+					for(int j = 0; j < answers.getJSONObject(i).getJSONObject("choices").getJSONArray("labels").length(); j++){
+					    list.add(answers.getJSONObject(i).getJSONObject("choices").getJSONArray("labels").getString(j));
+					}	
+				}
+				if(!answers.getJSONObject(i).getJSONObject("choices").isNull("other")){
+					list.add(answers.getJSONObject(i).getJSONObject("choices").getString("other"));	
+				}
+				venture.setVerticals(String.join(",",list));
+				
+			}
+			if(answers.getJSONObject(i).getJSONObject("field").getString("id").equals(comments)){
+				venture.setComments(answers.getJSONObject(i).getString("text"));
+			}
+			if(answers.getJSONObject(i).getJSONObject("field").getString("id").equals(email)){
+				venture.setEmail(answers.getJSONObject(i).getString("email"));
+			}
+			if(answers.getJSONObject(i).getJSONObject("field").getString("id").equals(totalMoneyRaised)){
+				venture.setTotalMoneyRaised(answers.getJSONObject(i).getString("text"));
+			}
+			if(answers.getJSONObject(i).getJSONObject("field").getString("id").equals(city)){
+				venture.setCity(answers.getJSONObject(i).getString("text"));
+			}
+			if(answers.getJSONObject(i).getJSONObject("field").getString("id").equals(advantage)){
+				venture.setAdvantage(answers.getJSONObject(i).getString("text"));
+			}
+			if(answers.getJSONObject(i).getJSONObject("field").getString("id").equals(founded)){
+				venture.setFounded(answers.getJSONObject(i).getString("date"));
+			}
+			if(answers.getJSONObject(i).getJSONObject("field").getString("id").equals(contactName)){
+				venture.setContactName(answers.getJSONObject(i).getString("text"));
+			}
+			if(answers.getJSONObject(i).getJSONObject("field").getString("id").equals(blurb)){
+				venture.setBlurb(answers.getJSONObject(i).getString("text"));
+			}
+			if(answers.getJSONObject(i).getJSONObject("field").getString("id").equals(competition)){
+				venture.setCompetition(answers.getJSONObject(i).getString("text"));
+			}
+			if(answers.getJSONObject(i).getJSONObject("field").getString("id").equals(b2bb2c)){
+				List<String> list = new ArrayList<String>();		
+				for(int j = 0; j < answers.getJSONObject(i).getJSONObject("choices").getJSONArray("labels").length(); j++){
+				    list.add(answers.getJSONObject(i).getJSONObject("choices").getJSONArray("labels").getString(j));
+				}
+				venture.setB2bb2c(String.join(",",list));	
+			}
+			if(answers.getJSONObject(i).getJSONObject("field").getString("id").equals(partnerInterests)){
+				venture.setPartnerInterests(answers.getJSONObject(i).getString("text"));
+			}
+			if(answers.getJSONObject(i).getJSONObject("field").getString("id").equals(partnerInterests)){
+				venture.setPartnerInterests(answers.getJSONObject(i).getString("text"));
+			}
+			if(answers.getJSONObject(i).getJSONObject("field").getString("id").equals(phoneNumber)){
+				venture.setPhoneNumber(answers.getJSONObject(i).getString("text"));
+			}
+			if(answers.getJSONObject(i).getJSONObject("field").getString("id").equals(phoneNumber)){
+				venture.setPhoneNumber(answers.getJSONObject(i).getString("text"));
+			}
+			if(answers.getJSONObject(i).getJSONObject("field").getString("id").equals(employees)){
+				venture.setEmployees(answers.getJSONObject(i).getString("text"));
+			}
+			if(answers.getJSONObject(i).getJSONObject("field").getString("id").equals(location)){
+				venture.setLocation(answers.getJSONObject(i).getJSONObject("choice").getString("label"));
+			}
+			if(answers.getJSONObject(i).getJSONObject("field").getString("id").equals(materials)){
+				venture.setMaterials(answers.getJSONObject(i).getString("file_url"));
+			}
+			if(answers.getJSONObject(i).getJSONObject("field").getString("id").equals(logo)){
+				logo_url = answers.getJSONObject(i).getString("file_url");
+				extension = FilenameUtils.getExtension(logo_url);
+				if(extension.equalsIgnoreCase("jpg") || extension.equalsIgnoreCase("jpeg") || extension.equalsIgnoreCase("png") || extension.equalsIgnoreCase("bmp") || extension.equalsIgnoreCase("wbmp") || extension.equalsIgnoreCase("gif")){
+					try {
+						URL url = new URL(logo_url);
+	/*					File file = CommonUtil.readURLWriteFile(url);
+						String imageType = CommonUtil.getImageType(file);
+						originalImage = JpegReader.readImage(file);*/
+						try{
+						originalImage = ImageIO.read(url);
+						} catch(CMMException ce) {
+						File destination = CommonUtil.readURLWriteFile(url);
+						FileSeekableStream seekableStream = new FileSeekableStream(destination);
+						ParameterBlock pb = new ParameterBlock();
+						pb.add(seekableStream);
+						originalImage = JAI.create("jpeg", pb).getAsBufferedImage();
+						}
+						BufferedImage thumbnail = Thumbnails.of(originalImage).size(100, 100).asBufferedImage();
+						venture.setThumbnail(thumbnail, logo_url.substring(logo_url.lastIndexOf(".")+1, logo_url.length()));
+					} catch (IOException e) {
+						// TODO Auto-generated catch block
+						e.printStackTrace();
+						canRead = new Boolean(false);
+					}
+				}
+			}
+		}
+
+		venture = HibernateUtil.updateVenture(venture);
 		if((extension.equalsIgnoreCase("jpg") || extension.equalsIgnoreCase("jpeg") || extension.equalsIgnoreCase("png") || extension.equalsIgnoreCase("bmp") || extension.equalsIgnoreCase("wbmp") || extension.equalsIgnoreCase("gif"))&&(canRead == true)){
 			try {
 			    // retrieve image

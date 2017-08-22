@@ -142,6 +142,12 @@ public class Ventures implements Serializable {
 	@IndexedEmbedded
 	@LazyCollection(LazyCollectionOption.FALSE)
 	@OneToMany(cascade=CascadeType.ALL, orphanRemoval=true)
+    @JoinColumn(name="listNameDealflow")
+    @ForeignKey(name = "dealflow")
+	private List<Dealflow> dealflow;
+	@IndexedEmbedded
+	@LazyCollection(LazyCollectionOption.FALSE)
+	@OneToMany(cascade=CascadeType.ALL, orphanRemoval=true)
     @JoinColumn(name="batchName")
     @ForeignKey(name = "batch")
 	private List<Batch> batch;
@@ -347,6 +353,24 @@ public class Ventures implements Serializable {
 		for(Top20 list: top20){
 			if(list.getListName().equalsIgnoreCase(removeme.getListName())){
 				top20.remove(list);
+				return;
+			}
+		}
+	}
+	
+	public List<Dealflow> getDealflow() {
+		return dealflow;
+	}
+	public void setDealflow(List<Dealflow> dealflow) {
+		this.dealflow = dealflow;
+	}
+	public void addDealflow(Dealflow addme){
+		dealflow.add(addme);
+	}
+	public void removeDealflow(Dealflow removeme){
+		for(Dealflow list: dealflow){
+			if(list.getListName().equalsIgnoreCase(removeme.getListName())){
+				dealflow.remove(list);
 				return;
 			}
 		}

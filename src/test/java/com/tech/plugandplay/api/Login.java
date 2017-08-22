@@ -17,8 +17,8 @@ public class Login {
 	@Test
 	public static void test() throws IOException {
 		String content = "{\"email\":\"raj.d.desai@gmail.com\",\"password\":\"temp4now\"}";
-		String hostname = "54.145.172.103";
-		/*String hostname = "playbook.pnptc.com";*/
+		/*String hostname = "54.145.172.103";*/
+		String hostname = "playbook.pnptc.com";
 		/*String hostname = "localhost";*/
 		//String content = new String(Files.readAllBytes(Paths.get("src/main/resources/json/typeform/bangk.json")), StandardCharsets.UTF_8);
 		Response response = null;
