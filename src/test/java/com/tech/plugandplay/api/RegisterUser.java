@@ -16,8 +16,8 @@ public class RegisterUser {
 	
 	@Test
 	public static void test() throws IOException {
-		String user = " Kevin Parakkattu";
-		String email = "kp@pnptc.com";
+		String user = "Victoria Bertasoli";
+		String email = "victoria@pnptc.com";
 		String content = "{\"api_key\":\"f7d624c2-f89e-40b9-9e4b-ff2db471a998\",\"name\":\""+user+"\",\"email\":\""+email+"\",\"password\":\"temp4now\"}";
 		/*String hostname = "54.145.172.103";*/
 		String hostname = "playbook.pnptc.com";

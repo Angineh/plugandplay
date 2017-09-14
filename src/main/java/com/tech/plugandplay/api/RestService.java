@@ -114,6 +114,35 @@ public class RestService {
     	}        
     }
 	
+	@GET
+    @Path("/ventures/filter/{page}")
+    @Produces(MediaType.APPLICATION_JSON)
+    @Formatted
+    public Response getVenturesPageFilter(@PathParam("page") int page, @QueryParam("company name") String companyName, @QueryParam("verticals") String verticals,
+    		@QueryParam("tags") String tags, @QueryParam("stage") String stage, @QueryParam("blurb") String blurb,
+    		@QueryParam("location") String location, @QueryParam("website") String website, @QueryParam("pnp contact") String pnpContact,
+    		@QueryParam("contact name") String contactName, @QueryParam("phone number") String phoneNumber, @QueryParam("total money raised") String totalMoneyRaised,
+    		@QueryParam("b2b b2c") String b2bb2c, @QueryParam("employees") String employees, @QueryParam("city") String city,
+    		@QueryParam("competition") String competition, @QueryParam("advantage") String advantage, @QueryParam("background") String background,
+    		@QueryParam("founded") String founded, @QueryParam("partner interests") String partnerInterests, @QueryParam("case study") String caseStudy, 
+    		@QueryParam("comments") String comments, @QueryParam("date of investment") String dateOfInvestment
+    		) {
+		
+		JSONObject pagination = new JSONObject();
+		List<Ventures> ventures = null;
+		ventures = HibernateUtil.getVenturesFilterPage(page, companyName, verticals, tags, stage, blurb, location, website, pnpContact, contactName, phoneNumber, totalMoneyRaised,
+				b2bb2c, employees, city, competition, advantage, background, founded, partnerInterests, caseStudy, comments, dateOfInvestment);
+
+       	if(!ventures.isEmpty()){
+       		pagination.put("count", HibernateUtil.getVenturesFilterCount(companyName, verticals, tags, stage, blurb, location, website, pnpContact, contactName, phoneNumber, totalMoneyRaised,
+       				b2bb2c, employees, city, competition, advantage, background, founded, partnerInterests, caseStudy, comments, dateOfInvestment));
+       		pagination.put("data", ventures);
+    		return Response.ok(pagination.toString()).header("Access-Control-Allow-Origin", "*").build();
+    	}else{
+    		return Response.status(Response.Status.NO_CONTENT).entity("Could not find any content.").header("Access-Control-Allow-Origin", "*").build();
+    	}        
+    }
+	
 	@POST
     @Path("/lucene")
     public Response updateLucene() {
@@ -633,6 +662,25 @@ public class RestService {
 	}
 	
 	@POST
+    @Path("/ventures/delete")
+	@Consumes(MediaType.APPLICATION_JSON)
+	@Produces(MediaType.APPLICATION_JSON)
+	@Formatted
+    public Response deleteVenture(String json){
+		
+		JSONObject body = new JSONObject(json);
+		int id = body.getInt("id");
+		Ventures venture = HibernateUtil.getVenture(id);
+    	if(venture != null){
+    		HibernateUtil.deleteVenture(venture);
+    		return Response.ok(venture).header("Access-Control-Allow-Origin", "*").build();
+    	}else{
+    		return Response.status(Response.Status.NO_CONTENT).entity("Entity not found for ID: " + id).header("Access-Control-Allow-Origin", "*").build();
+    	}
+		
+	}
+	
+	@POST
     @Path("/ventures/addtop100")
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
@@ -1141,10 +1189,183 @@ public class RestService {
 	
 	@POST
     @Path("/ventures/create")
+	@Consumes(MediaType.MULTIPART_FORM_DATA)
+	@Produces(MediaType.APPLICATION_JSON)
+    @Formatted
+    public Response createVenture(MultipartFormDataInput multipart) {
+		
+		Ventures venture = new Ventures();
+		String fileName = "";
+		String json;
+		Map<String, List<InputPart>> formParts = multipart.getFormDataMap();
+		try {
+			json = multipart.getFormDataPart("data", String.class, null);
+			//log.info("Ventures logo id: "+ id);
+		} catch (IOException e) {
+			log.fatal(e.getMessage(), e.fillInStackTrace());
+			return Response.status(Status.NO_CONTENT).entity("Failed to update startup logo!").header("Access-Control-Allow-Origin", "*").build();
+		}
+
+		List<InputPart> inPart = formParts.get("file"); // "file" should match the name attribute of your HTML file input 
+		for (InputPart inputPart : inPart) {
+		  // Retrieve headers, read the Content-Disposition header to obtain the original name of the file
+			MultivaluedMap<String, String> headers = inputPart.getHeaders();
+			String[] contentDispositionHeader = headers.getFirst("Content-Disposition").split(";");
+			for (String name : contentDispositionHeader) {
+			  if ((name.trim().startsWith("filename"))) {
+			    String[] tmp = name.split("=");
+			    fileName = tmp[1].trim().replaceAll("\"","");          
+			  }
+			}
+		}
+
+		
+		//log.info("JSON body:"+ json);
+		JSONObject body = new JSONObject(json);
+/*		Ventures venture = HibernateUtil.getVenture(body.getInt("id"));		
+		if(venture == null){
+			return Response.status(Status.NO_CONTENT).entity("Could not find venture with id "+body.getInt("id")+" to update!").header("Access-Control-Allow-Origin", "*").build();
+		}*/
+		
+		if(!body.isNull("advantage")){
+			venture.setAdvantage(body.getString("advantage"));
+		}
+		if(!body.isNull("b2bb2c")){
+			List<String> listb2b = new ArrayList<String>();
+			for (int i = 0; i < body.getJSONArray("b2bb2c").length(); i++) {
+			    listb2b.add(body.getJSONArray("b2bb2c").getString(i));
+			}
+			venture.setB2bb2c(String.join(",", listb2b));
+		}
+		if(!body.isNull("background")){
+			venture.setBackground(body.getString("background"));
+		}
+		if(!body.isNull("blurb")){
+			venture.setBlurb(body.getString("blurb"));
+		}
+		if(!body.isNull("caseStudy")){
+			venture.setCaseStudy(body.getString("caseStudy"));
+		}
+		if(!body.isNull("city")){
+			venture.setCity(body.getString("city"));
+		}
+		if(!body.isNull("comments")){
+			venture.setComments(body.getString("comments"));
+		}
+		if(!body.isNull("companyName")){
+			venture.setCompanyName(body.getString("companyName"));
+		}
+		if(!body.isNull("competition")){
+			venture.setCompetition(body.getString("competition"));
+		}
+		if(!body.isNull("contactName")){
+			venture.setContactName(body.getString("contactName"));
+		}
+		if(!body.isNull("email")){
+			venture.setEmail(body.getString("email"));
+		}
+		if(!body.isNull("employees")){
+			venture.setEmployees(body.getString("employees"));
+		}
+		if(!body.isNull("founded")){
+			venture.setFounded(body.getString("founded"));
+		}
+		if(!body.isNull("location")){
+			venture.setLocation(body.getString("location"));
+		}
+		if(!body.isNull("materials")){
+			venture.setMaterials(body.getString("materials"));
+		}
+		if(!body.isNull("partnerInterests")){
+			venture.setPartnerInterests(body.getString("partnerInterests"));
+		}
+		if(!body.isNull("phoneNumber")){
+			venture.setPhoneNumber(body.getString("phoneNumber"));
+		}
+		if(!body.isNull("pnpContact")){
+			venture.setPnpContact(body.getString("pnpContact"));
+		}
+		if(!body.isNull("stage")){
+			venture.setStage(body.getString("stage"));
+		}
+		if(!body.isNull("tags")){
+			List<String> listtabs = new ArrayList<String>();
+			for (int i = 0; i < body.getJSONArray("tags").length(); i++) {
+				listtabs.add(body.getJSONArray("tags").getString(i));
+			}
+			venture.setTags(String.join(",", listtabs));
+		}
+		if(!body.isNull("totalMoneyRaised")){
+			venture.setTotalMoneyRaised(body.getString("totalMoneyRaised"));
+		}
+		if(!body.isNull("verticals")){
+			List<String> listverticals = new ArrayList<String>();
+			for (int i = 0; i < body.getJSONArray("verticals").length(); i++) {
+				listverticals.add(body.getJSONArray("verticals").getString(i));
+			}
+			venture.setVerticals(String.join(",", listverticals));
+		}
+		if(!body.isNull("website")){
+			venture.setWebsite(body.getString("website"));
+		}
+		if(!body.isNull("portfolio")){
+			venture.setPortfolio(body.getBoolean("portfolio"));
+		}
+		if(!body.isNull("dateOfInvestment")){
+			venture.setDateOfInvestment(body.getString("dateOfInvestment"));
+		}
+		SimpleDateFormat sdf = new SimpleDateFormat("MM/dd/yyyy HH:mm:ss");
+		Timestamp time = new Timestamp(System.currentTimeMillis());
+		venture.setTimestamp(sdf.format(time));
+		venture.setUpdated(new Date());
+		
+		try (InputStream in = multipart.getFormDataPart("file", InputStream.class, null);
+		        FileOutputStream fos = new FileOutputStream("/tmp/images/startups/tmp"+fileName.substring(fileName.lastIndexOf("."), fileName.length()))) {
+		        byte[] buff = new byte[1024];
+		        int count;
+		        while ((count = in.read(buff)) != -1) {
+		            fos.write(buff, 0, count);
+		        }
+	    } catch (IOException e) {
+
+	    	log.fatal(e.getMessage(), e.fillInStackTrace());
+			return Response.status(Status.NO_CONTENT).entity("Failed to update startup logo!").header("Access-Control-Allow-Origin", "*").build();
+		}
+		try {			
+			BufferedImage originalImage = ImageIO.read(new File("/tmp/images/startups/tmp"+fileName.substring(fileName.lastIndexOf("."), fileName.length())));
+			BufferedImage thumbnail = Thumbnails.of(originalImage).size(100, 100).asBufferedImage();
+			venture.setThumbnail(thumbnail, fileName.substring(fileName.lastIndexOf(".")+1, fileName.length()));			
+		} catch (IOException e) {
+
+			log.fatal(e.getMessage(), e.fillInStackTrace());
+			return Response.status(Status.NO_CONTENT).entity("Failed to update startup logo!").header("Access-Control-Allow-Origin", "*").build();
+			
+		}
+		
+		venture = HibernateUtil.newVenture(venture);
+		
+		log.info("File name: "+ fileName);		
+		try (InputStream in = multipart.getFormDataPart("file", InputStream.class, null);
+		        FileOutputStream fos = new FileOutputStream("/tmp/images/startups/"+venture.getId()+fileName.substring(fileName.lastIndexOf("."), fileName.length()))) {
+		        byte[] buff = new byte[1024];
+		        int count;
+		        while ((count = in.read(buff)) != -1) {
+		            fos.write(buff, 0, count);
+		        }
+	    } catch (IOException e) {
+
+	    	log.fatal(e.getMessage(), e.fillInStackTrace());
+			return Response.status(Status.NO_CONTENT).entity("Failed to update startup logo!").header("Access-Control-Allow-Origin", "*").build();
+		}
+		return Response.ok(venture).header("Access-Control-Allow-Origin", "*").build();
+	}
+	
+	@POST
+    @Path("/ventures/createold")
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
     @Formatted
-    public Response createVenture(String json) {
+    public Response createVentureOld(String json) {
 		
 		//log.info("JSON body:"+ json);
 		JSONObject body = new JSONObject(json);
@@ -1163,7 +1384,6 @@ public class RestService {
 			}
 			venture.setB2bb2c(String.join(",", listb2b));
 		}
-		
 		if(!body.isNull("background")){
 			venture.setBackground(body.getString("background"));
 		}
@@ -1288,30 +1508,31 @@ public class RestService {
 		venture.setWebsite("");
 		venture.setPortfolio(new Boolean(false));
 		//String timestamp = null;
-		String companyName = "32472198";
-		String blurb = "32472206";
-		String verticals = "32472221";
-		String website = "32472204";
-		String pnpContact = "39683158";
-		String contactName = "32472199";
-		String email = "32472205";
-		String phoneNumber = "32472200";
-		String totalMoneyRaised = "32472201";
-		String stage = "32472210";
-		String b2bb2c = "32472220";
-		String employees = "32474775";
-		String location = "32472211";
-		String city = "32472202";
-		String competition = "32472207";
-		String advantage = "32472208";
-		String background = "32472209";
-		String founded = "32472219";
-		String partnerInterests = "37990890";
-		String caseStudy = "32474974";
-		String comments = "32474976";
-		String tags = "33005691";
-		String materials = "32472224";
-		String logo = "50982627";
+		String companyName = "32472198";//
+		String blurb = "32472206";//
+		String verticals = "32472221";//
+		String website = "32472204";//
+		String pnpContact = "39683158";//
+		String contactName = "32472199";//
+		String email = "32472205";//
+		String phoneNumber = "32472200";//
+		String totalMoneyRaised = "32472201";//
+		//String stage = "32472210";
+		String stage = "59324917";//
+		String b2bb2c = "32472220";//
+		String employees = "32474775";//
+		String location = "32472211";//
+		String city = "32472202";//
+		String competition = "32472207";//
+		String advantage = "32472208";//
+		String background = "32472209";//
+		String founded = "32472219";//
+		String partnerInterests = "37990890";//
+		String caseStudy = "32474974";//
+		String comments = "32474976";//
+		String tags = "33005691";//
+		String materials = "32472224";//
+		String logo = "50982627";//
 		BufferedImage originalImage = null;
 		String logo_url = null;
 		String extension = "";
@@ -1553,31 +1774,32 @@ public class RestService {
 		JSONArray answers = body.getJSONObject("form_response").getJSONArray("answers");
 		
 
-		//String timestamp = null;
-		String companyName = "32472198";
-		String blurb = "32472206";
+		//String timestamp = null;	
+		String companyName = "32472198";//
+		String blurb = "32472206";//
 		String verticals = "32472221";
-		String website = "32472204";
-		String pnpContact = "39683158";
-		String contactName = "32472199";
-		String email = "32472205";
-		String phoneNumber = "32472200";
-		String totalMoneyRaised = "32472201";
-		String stage = "32472210";
-		String b2bb2c = "32472220";
-		String employees = "32474775";
-		String location = "32472211";
-		String city = "32472202";
-		String competition = "32472207";
-		String advantage = "32472208";
-		String background = "32472209";
-		String founded = "32472219";
-		String partnerInterests = "37990890";
-		String caseStudy = "32474974";
-		String comments = "32474976";
-		String tags = "33005691";
-		String materials = "32472224";
-		String logo = "50982627";
+		String website = "32472204";//
+		String pnpContact = "39683158";//
+		String contactName = "32472199";//
+		String email = "32472205";//
+		String phoneNumber = "32472200";//
+		String totalMoneyRaised = "32472201";//
+		//String stage = "32472210";
+		String stage = "59324917";//
+		String b2bb2c = "32472220";//
+		String employees = "32474775";//
+		String location = "32472211";//
+		String city = "32472202";//
+		String competition = "32472207";//
+		String advantage = "32472208";//
+		String background = "32472209";//
+		String founded = "32472219";//
+		String partnerInterests = "37990890";//
+		String caseStudy = "32474974";//
+		String comments = "32474976";//
+		String tags = "33005691";//
+		String materials = "32472224";//
+		String logo = "50982627";//
 		BufferedImage originalImage = null;
 		String logo_url = null;
 		String extension = "";
@@ -1824,19 +2046,22 @@ public class RestService {
 			//TODO check to see if it is a corporate account
 			// email is not part of ventures;
 			// Return 204
+			log.info("Can't register.");
 			return Response.status(Response.Status.NO_CONTENT).entity("Could not register your email. Please contact a Plug and Play representative.").header("Access-Control-Allow-Origin", "*").build();
 		}
 		
 		user = HibernateUtil.newUser(user);
 		
-		final String username = "raj.desai@plugandplaytechcenter.com";
-		final String pass = "39Ven0710!";
+		/*final String username = "raj.desai@plugandplaytechcenter.com";
+		final String pass = "39Ven0710!";*/
+		final String username = "playbook.pnp@gmail.com";
+		final String pass = "Tmp4now!";
 
 		Properties props = new Properties();
 		props.put("mail.smtp.auth", "true");
 		props.put("mail.smtp.starttls.enable", "true");
-		//props.put("mail.smtp.host", "smtp.gmail.com");
-		props.put("mail.smtp.host", "west.exch024.serverdata.net");
+		props.put("mail.smtp.host", "smtp.gmail.com");
+		//props.put("mail.smtp.host", "west.exch024.serverdata.net");
 		props.put("mail.smtp.port", "587");
 
 		Session session = Session.getInstance(props,
@@ -1850,7 +2075,8 @@ public class RestService {
 
 			Message message = new MimeMessage(session);
 			try {
-				message.setFrom(new InternetAddress("no-reply@plugandplaytechcenter.com", "Playbook"));
+				//message.setFrom(new InternetAddress("no-reply@pnptc.com", "Playbook"));
+				message.setFrom(new InternetAddress("playbook.pnp@gmail.com", "Playbook"));
 			} catch (UnsupportedEncodingException e) {
 				// TODO Auto-generated catch block
 				return Response.status(Response.Status.NO_CONTENT).entity("Could not register your email. Please contact a Plug and Play representative.").header("Access-Control-Allow-Origin", "*").build();
@@ -1871,6 +2097,7 @@ public class RestService {
 			Transport.send(message);
 
 		} catch (MessagingException e) {
+			log.info("Could not register email with exception:"+ e.toString());
 			return Response.status(Response.Status.NO_CONTENT).entity("Could not register your email. Please contact a Plug and Play representative.").header("Access-Control-Allow-Origin", "*").build();
 		}
 		

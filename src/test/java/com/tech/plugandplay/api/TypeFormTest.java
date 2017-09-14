@@ -16,8 +16,8 @@ public class TypeFormTest {
 	
 	@Test
 	public static void test() throws IOException {
-		String hostname = "54.145.172.103";
-		//String hostname = "playbook.pnptc.com";
+		//String hostname = "54.145.172.103";
+		String hostname = "playbook.pnptc.com";
 		//String hostname = "localhost";
 		String content = new String(Files.readAllBytes(Paths.get("src/main/resources/json/typeform/freshstrips.json")), StandardCharsets.UTF_8);
 		Response response = null;

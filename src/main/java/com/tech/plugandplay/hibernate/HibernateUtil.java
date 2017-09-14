@@ -607,10 +607,10 @@ public class HibernateUtil {
 	}
 	
 	public static List<Ventures> getVenturesPage(int page) {
-		if(page == 1){
+		 if(page == 1){
 			 page = 0;
 		 } else {
-			 page = page*10;
+			 page = (page-1)*10;
 		 }
 		 Session session = SessionFactoryUtil.getSessionFactory().getCurrentSession();
 	     try {
@@ -644,7 +644,7 @@ public class HibernateUtil {
 		 if(page == 1){
 			 page = 0;
 		 } else {
-			 page = page*10;
+			 page = (page-1)*10;
 		 }
 		 Session session = SessionFactoryUtil.getSessionFactory().getCurrentSession();
 		 FullTextSession fullTextSession = Search.getFullTextSession(session);
@@ -674,6 +674,191 @@ public class HibernateUtil {
 	         throw e;
 	     }
 	}
+	
+	public static List<Ventures> getVenturesFilterPage(int page, String companyName, String verticals, String tags, String stage, String blurb, 
+			String location, String website, String pnpContact, String contactName, String phoneNumber, String totalMoneyRaised,
+			String b2bb2c, String employees, String city, String competition, String advantage, String background, String founded,
+			String partnerInterests, String caseStudy, String comments, String dateOfInvestment) {
+		 if(page == 1){
+			 page = 0;
+		 } else {
+			 page = (page-1)*10;
+		 }
+		 Session session = SessionFactoryUtil.getSessionFactory().getCurrentSession();
+		 
+	     try {
+	    	session.getTransaction().begin();
+	    	
+	    	if(companyName != null){
+	    		session.enableFilter("byCompanyName").setParameter("companyNameFilter", '%'+companyName+'%');
+	    	}
+	    	if(verticals != null){
+	    		session.enableFilter("byVerticals").setParameter("verticalsFilter", '%'+verticals+'%');
+	    	}
+	    	if(tags != null){
+	    		session.enableFilter("byTags").setParameter("tagsFilter", '%'+tags+'%');
+	    	}
+	    	if(stage != null){
+	    		session.enableFilter("byStage").setParameter("stageFilter", '%'+stage+'%');
+	    	}
+	    	if(blurb != null){
+	    		session.enableFilter("byBlurb").setParameter("blurbFilter", '%'+blurb+'%');
+	    	}
+	    	if(location != null){
+	    		session.enableFilter("byLocation").setParameter("locationFilter", '%'+location+'%');
+	    	}
+	    	if(website != null){
+	    		session.enableFilter("byWebsite").setParameter("websiteFilter", '%'+website+'%');
+	    	}
+	    	if(pnpContact !=null){
+	    		session.enableFilter("byPnpContact").setParameter("pnpContactFilter", '%'+pnpContact+'%');
+	    	}
+	    	if(contactName !=null){
+	    		session.enableFilter("byContactName").setParameter("contactNameFilter", '%'+contactName+'%');
+	    	}
+	    	if(phoneNumber !=null){
+	    		session.enableFilter("byPhoneNumber").setParameter("phoneNumberFilter", '%'+phoneNumber+'%');
+	    	}
+	    	if(totalMoneyRaised !=null){
+	    		session.enableFilter("byTotalMoneyRaised").setParameter("totalMoneyRaisedFilter", '%'+totalMoneyRaised+'%');
+	    	}
+	    	if(b2bb2c !=null){
+	    		session.enableFilter("byB2bb2c").setParameter("b2bb2cFilter", '%'+b2bb2c+'%');
+	    	}
+	    	if(employees != null){
+	    		session.enableFilter("byEmployees").setParameter("employeesFilter", '%'+employees+'%');
+	    	}
+	    	if(city != null){
+	    		session.enableFilter("byCity").setParameter("cityFilter", '%'+city+'%');
+	    	}
+	    	if(competition != null){
+	    		session.enableFilter("byCompetition").setParameter("competitionFilter", '%'+competition+'%');
+	    	}
+	    	if(advantage != null){
+	    		session.enableFilter("byAdvantage").setParameter("advantageFilter", '%'+advantage+'%');
+	    	}
+	    	if(background != null){
+	    		session.enableFilter("byBackground").setParameter("backgroundFilter", '%'+background+'%');
+	    	}
+	    	if(founded != null){
+	    		session.enableFilter("byFounded").setParameter("foundedFilter", '%'+founded+'%');
+	    	}
+	    	if(partnerInterests != null){
+	    		session.enableFilter("byPartnerInterests").setParameter("partnerInterestsFilter", '%'+partnerInterests+'%');
+	    	}
+	    	if(caseStudy != null){
+	    		session.enableFilter("byCaseStudy").setParameter("caseStudyFilter", '%'+caseStudy+'%');
+	    	}
+	    	if(comments != null){
+	    		session.enableFilter("byComments").setParameter("commentsFilter", '%'+comments+'%');
+	    	}
+	    	if(dateOfInvestment != null){
+	    		session.enableFilter("byDateOfInvestment").setParameter("dateOfInvestmentFilter", '%'+dateOfInvestment+'%');
+	    	}
+	    	
+		    @SuppressWarnings("unchecked")
+			List<Ventures> ventures = session.createCriteria(Ventures.class).addOrder(Order.desc("id")).setFirstResult(page).setMaxResults(10).list();
+		    session.getTransaction().commit();
+		     
+	     return ventures;
+	      
+	     } catch (RuntimeException e) {
+	         session.getTransaction().rollback();
+	         log.fatal(e.getMessage(), e.fillInStackTrace());
+	         throw e;
+	     }
+	}
+	
+	public static int getVenturesFilterCount(String companyName, String verticals, String tags, String stage, String blurb, 
+			String location, String website, String pnpContact, String contactName, String phoneNumber, String totalMoneyRaised,
+			String b2bb2c, String employees, String city, String competition, String advantage, String background, String founded,
+			String partnerInterests, String caseStudy, String comments, String dateOfInvestment) {
+
+		 Session session = SessionFactoryUtil.getSessionFactory().getCurrentSession();
+		 
+	     try {
+	    	session.getTransaction().begin();
+		    
+	    	if(companyName != null){
+	    		session.enableFilter("byCompanyName").setParameter("companyNameFilter", '%'+companyName+'%');
+	    	}
+	    	if(verticals != null){
+	    		session.enableFilter("byVerticals").setParameter("verticalsFilter", '%'+verticals+'%');
+	    	}
+	    	if(tags != null){
+	    		session.enableFilter("byTags").setParameter("tagsFilter", '%'+tags+'%');
+	    	}
+	    	if(stage != null){
+	    		session.enableFilter("byStage").setParameter("stageFilter", '%'+stage+'%');
+	    	}
+	    	if(blurb != null){
+	    		session.enableFilter("byBlurb").setParameter("blurbFilter", '%'+blurb+'%');
+	    	}
+	    	if(location != null){
+	    		session.enableFilter("byLocation").setParameter("locationFilter", '%'+location+'%');
+	    	}
+	    	if(website != null){
+	    		session.enableFilter("byWebsite").setParameter("websiteFilter", '%'+website+'%');
+	    	}
+	    	if(pnpContact !=null){
+	    		session.enableFilter("byPnpContact").setParameter("pnpContactFilter", '%'+pnpContact+'%');
+	    	}
+	    	if(contactName !=null){
+	    		session.enableFilter("byContactName").setParameter("contactNameFilter", '%'+contactName+'%');
+	    	}
+	    	if(phoneNumber !=null){
+	    		session.enableFilter("byPhoneNumber").setParameter("phoneNumberFilter", '%'+phoneNumber+'%');
+	    	}
+	    	if(totalMoneyRaised !=null){
+	    		session.enableFilter("byTotalMoneyRaised").setParameter("totalMoneyRaisedFilter", '%'+totalMoneyRaised+'%');
+	    	}
+	    	if(b2bb2c !=null){
+	    		session.enableFilter("byB2bb2c").setParameter("b2bb2cFilter", '%'+b2bb2c+'%');
+	    	}
+	    	if(employees != null){
+	    		session.enableFilter("byEmployees").setParameter("employeesFilter", '%'+employees+'%');
+	    	}
+	    	if(city != null){
+	    		session.enableFilter("byCity").setParameter("cityFilter", '%'+city+'%');
+	    	}
+	    	if(competition != null){
+	    		session.enableFilter("byCompetition").setParameter("competitionFilter", '%'+competition+'%');
+	    	}
+	    	if(advantage != null){
+	    		session.enableFilter("byAdvantage").setParameter("advantageFilter", '%'+advantage+'%');
+	    	}
+	    	if(background != null){
+	    		session.enableFilter("byBackground").setParameter("backgroundFilter", '%'+background+'%');
+	    	}
+	    	if(founded != null){
+	    		session.enableFilter("byFounded").setParameter("foundedFilter", '%'+founded+'%');
+	    	}
+	    	if(partnerInterests != null){
+	    		session.enableFilter("byPartnerInterests").setParameter("partnerInterestsFilter", '%'+partnerInterests+'%');
+	    	}
+	    	if(caseStudy != null){
+	    		session.enableFilter("byCaseStudy").setParameter("caseStudyFilter", '%'+caseStudy+'%');
+	    	}
+	    	if(comments != null){
+	    		session.enableFilter("byComments").setParameter("commentsFilter", '%'+comments+'%');
+	    	}
+	    	if(dateOfInvestment != null){
+	    		session.enableFilter("byDateOfInvestment").setParameter("dateOfInvestmentFilter", '%'+dateOfInvestment+'%');
+	    	}
+	    	
+		    int count = session.createCriteria(Ventures.class).list().size();
+		    session.getTransaction().commit();
+		     
+	     return count;
+	      
+	     } catch (RuntimeException e) {
+	         session.getTransaction().rollback();
+	         log.fatal(e.getMessage(), e.fillInStackTrace());
+	         throw e;
+	     }
+	}
+	
+	
 	public static int getVenturesSearchCount(String query) {
 		 Session session = SessionFactoryUtil.getSessionFactory().getCurrentSession();
 		 FullTextSession fullTextSession = Search.getFullTextSession(session);

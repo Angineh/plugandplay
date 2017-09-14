@@ -13,19 +13,22 @@ import javax.imageio.ImageIO;
 import javax.persistence.CascadeType;
 import javax.persistence.Column;
 import javax.persistence.Entity;
-import javax.persistence.FetchType;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
 import javax.persistence.JoinColumn;
 import javax.persistence.Lob;
 import javax.persistence.OneToMany;
-import javax.persistence.OneToOne;
 import javax.persistence.Table;
 import javax.persistence.Temporal;
 import javax.persistence.TemporalType;
 
 import org.apache.commons.codec.binary.Base64;
 import org.apache.commons.io.IOUtils;
+import org.hibernate.annotations.FilterDef;
+import org.hibernate.annotations.FilterDefs;
+import org.hibernate.annotations.ParamDef;
+import org.hibernate.annotations.Filters;
+import org.hibernate.annotations.Filter;
 import org.hibernate.annotations.ForeignKey;
 import org.hibernate.annotations.LazyCollection;
 import org.hibernate.annotations.LazyCollectionOption;
@@ -39,6 +42,56 @@ import org.ocpsoft.pretty.time.PrettyTime;
 
 @SuppressWarnings("serial")
 @Entity
+@FilterDefs({
+	@FilterDef(name = "byCompanyName", parameters=@ParamDef( name = "companyNameFilter", type = "string")),
+	@FilterDef(name = "byVerticals", parameters=@ParamDef( name = "verticalsFilter", type = "string")),
+	@FilterDef(name = "byTags", parameters=@ParamDef( name = "tagsFilter", type = "string")),
+	@FilterDef(name = "byStage", parameters=@ParamDef( name = "stageFilter", type = "string")),
+	@FilterDef(name = "byBlurb", parameters=@ParamDef( name = "blurbFilter", type = "string")),
+	@FilterDef(name = "byLocation", parameters=@ParamDef( name = "locationFilter", type = "string")),
+	@FilterDef(name = "byWebsite", parameters=@ParamDef( name = "websiteFilter", type = "string")),
+	@FilterDef(name = "byPnpContact", parameters=@ParamDef( name = "pnpContactFilter", type = "string")),
+	@FilterDef(name = "byContactName", parameters=@ParamDef( name = "contactNameFilter", type = "string")),
+	@FilterDef(name = "byPhoneNumber", parameters=@ParamDef( name = "phoneNumberFilter", type = "string")),
+	@FilterDef(name = "byTotalMoneyRaised", parameters=@ParamDef( name = "totalMoneyRaisedFilter", type = "string")),
+	@FilterDef(name = "byB2bb2c", parameters=@ParamDef( name = "b2bb2cFilter", type = "string")),
+	@FilterDef(name = "byEmployees", parameters=@ParamDef( name = "employeesFilter", type = "string")),
+	@FilterDef(name = "byCity", parameters=@ParamDef( name = "cityFilter", type = "string")),
+	@FilterDef(name = "byCompetition", parameters=@ParamDef( name = "competitionFilter", type = "string")),
+	@FilterDef(name = "byAdvantage", parameters=@ParamDef( name = "advantageFilter", type = "string")),
+	@FilterDef(name = "byBackground", parameters=@ParamDef( name = "backgroundFilter", type = "string")),
+	@FilterDef(name = "byFounded", parameters=@ParamDef( name = "foundedFilter", type = "string")),
+	@FilterDef(name = "byPartnerInterests", parameters=@ParamDef( name = "partnerInterestsFilter", type = "string")),
+	@FilterDef(name = "byCaseStudy", parameters=@ParamDef( name = "caseStudyFilter", type = "string")),
+	@FilterDef(name = "byComments", parameters=@ParamDef( name = "commentsFilter", type = "string")),
+	@FilterDef(name = "byDateOfInvestment", parameters=@ParamDef( name = "dateOfInvestmentFilter", type = "string"))
+})
+@Filters({ 
+	@Filter(name="byCompanyName", condition="COMPANY_NAME like :companyNameFilter"),
+	@Filter(name="byVerticals", condition="VERTICALS like :verticalsFilter"),
+	@Filter(name="byTags", condition="TAGS like :tagsFilter"),
+	@Filter(name="byStage", condition="STAGE like :stageFilter"),
+	@Filter(name="byBlurb", condition="BLURB like :blurbFilter"),
+	@Filter(name="byLocation", condition="LOCATION like :locationFilter"),
+	@Filter(name="byWebsite", condition="WEBSITE like :websiteFilter"),
+	@Filter(name="byPnpContact", condition="PNP_CONTACT like :pnpContactFilter"),
+	@Filter(name="byContactName", condition="CONTACT_NAME like :contactNameFilter"),
+	@Filter(name="byPhoneNumber", condition="PHONE_NUMBER like :phoneNumberFilter"),
+	@Filter(name="byTotalMoneyRaised", condition="TOTAL_MONEY_RAISED like :totalMoneyRaisedFilter"),
+	@Filter(name="byB2bb2c", condition="B2B_B2C like :b2bb2cFilter"),
+	@Filter(name="byEmployees", condition="EMPLOYEES like :employeesFilter"),
+	@Filter(name="byCity", condition="CITY like :cityFilter"),
+	@Filter(name="byCompetition", condition="COMPETITION like :competitionFilter"),
+	@Filter(name="byAdvantage", condition="ADVANTAGE like :advantageFilter"),
+	@Filter(name="byBackground", condition="BACKGROUND like :backgroundFilter"),
+	@Filter(name="byFounded", condition="FOUNDED like :foundedFilter"),
+	@Filter(name="byPartnerInterests", condition="PARTNER_INTERESTS like :partnerInterestsFilter"),
+	@Filter(name="byCaseStudy", condition="CASE_STUDY like :caseStudyFilter"),
+	@Filter(name="byComments", condition="COMMENTS like :commentsFilter"),
+	@Filter(name="byDateOfInvestment", condition="DATE_OF_INVESTMENT like :dateOfInvestmentFilter")
+	
+	
+})
 @Indexed
 @Table(name="ventures")
 public class Ventures implements Serializable {
