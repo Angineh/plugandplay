@@ -19,7 +19,7 @@ public class TypeFormTest {
 		//String hostname = "54.145.172.103";
 		String hostname = "playbook.pnptc.com";
 		//String hostname = "localhost";
-		String content = new String(Files.readAllBytes(Paths.get("src/main/resources/json/typeform/freshstrips.json")), StandardCharsets.UTF_8);
+		String content = new String(Files.readAllBytes(Paths.get("src/main/resources/json/typeform/clayfingers.json")), StandardCharsets.UTF_8);
 		Response response = null;
 		//for(int i = 0; i < 100; i ++){
 		response = RestAssured.given().redirects().follow(true).contentType(ContentType.JSON).body(content).post("http://"+hostname+":8080/plugandplay/api/v1/ventures/new");	

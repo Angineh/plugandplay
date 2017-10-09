@@ -15,10 +15,31 @@ import javax.persistence.TemporalType;
 import javax.persistence.Transient;
 
 import org.hibernate.annotations.Cascade;
+import org.hibernate.annotations.Filter;
+import org.hibernate.annotations.FilterDef;
+import org.hibernate.annotations.FilterDefs;
+import org.hibernate.annotations.Filters;
+import org.hibernate.annotations.ParamDef;
+import org.hibernate.search.annotations.Analyze;
+import org.hibernate.search.annotations.Field;
+import org.hibernate.search.annotations.Index;
+import org.hibernate.search.annotations.Indexed;
+import org.hibernate.search.annotations.Store;
 import org.ocpsoft.pretty.time.PrettyTime;
 
 @SuppressWarnings("serial")
 @Entity
+@FilterDefs({
+	@FilterDef(name = "byName", parameters=@ParamDef( name = "nameFilter", type = "string")),
+	@FilterDef(name = "byEmail", parameters=@ParamDef( name = "emailFilter", type = "string")),
+	@FilterDef(name = "byRole", parameters=@ParamDef( name = "roleFilter", type = "string"))
+})
+@Filters({ 
+	@Filter(name="byName", condition="NAME like :nameFilter"),
+	@Filter(name="byEmail", condition="EMAIL like :emailFilter"),
+	@Filter(name="byRole", condition="ROLE like :roleFilter"),
+})
+@Indexed
 @Table(name="users")
 public class Users implements Serializable {
 	
@@ -26,12 +47,15 @@ public class Users implements Serializable {
 	@GeneratedValue
 	@Column(name="ID")
 	private int id;
+	@Field(index=Index.YES, analyze=Analyze.YES, store=Store.NO)
 	@Column(name="NAME")
 	private String name;
+	@Field(index=Index.YES, analyze=Analyze.YES, store=Store.NO)
 	@Column(name="EMAIL")
 	private String email;
 	@Column(name="PASSWORD")
 	private String password;
+	@Field(index=Index.YES, analyze=Analyze.YES, store=Store.NO)
 	@Column(name="ROLE")
 	private String role; //admin, user, startup, corporation
 	@Column(name="API_KEY")

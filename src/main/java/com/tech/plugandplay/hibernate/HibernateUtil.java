@@ -606,6 +606,24 @@ public class HibernateUtil {
 	     }
 	}
 	
+	public static List<Users> getAllUsers() {
+		 Session session = SessionFactoryUtil.getSessionFactory().getCurrentSession();
+	     try {
+	     session.getTransaction().begin();
+	     
+	     @SuppressWarnings("unchecked")
+		List<Users> users = session.createCriteria(Users.class).addOrder(Order.desc("id")).list();
+	     session.getTransaction().commit();
+	     
+	     return users;
+	      
+	     } catch (RuntimeException e) {
+	         session.getTransaction().rollback();
+	         log.fatal(e.getMessage(), e.fillInStackTrace());
+	         throw e;
+	     }
+	}
+	
 	public static List<Ventures> getVenturesPage(int page) {
 		 if(page == 1){
 			 page = 0;
@@ -1696,4 +1714,170 @@ public class HibernateUtil {
 		     throw e;
 		}
 	}
+	
+	public static int getUsersSearchCount(String query) {
+		 Session session = SessionFactoryUtil.getSessionFactory().getCurrentSession();
+		 FullTextSession fullTextSession = Search.getFullTextSession(session);
+	     try {
+	    	 Transaction tx = fullTextSession.beginTransaction();
+	    	// create native Lucene query unsing the query DSL
+	    	// alternatively you can write the Lucene query using the Lucene query parser
+	    	// or the Lucene programmatic API. The Hibernate Search DSL is recommended though
+	    	QueryBuilder qb = fullTextSession.getSearchFactory()
+	    	    .buildQueryBuilder().forEntity( Users.class ).get();
+	    	org.apache.lucene.search.Query lq = qb.keyword().onFields("name", "email", "role").matching(query).createQuery();
+	    	
+	    	// wrap Lucene query in a org.hibernate.Query
+	    	int count = fullTextSession.createFullTextQuery(lq, Users.class).getResultSize();
+
+	    	tx.commit();
+	     
+	     return count;
+	      
+	     } catch (RuntimeException e) {
+	         session.getTransaction().rollback();
+	         log.fatal(e.getMessage(), e.fillInStackTrace());
+	         throw e;
+	     }
+	}
+	
+	public static List<Users> getUsersPage(int page, String query) {
+		 if(page == 1){
+			 page = 0;
+		 } else {
+			 page = (page-1)*10;
+		 }
+		 Session session = SessionFactoryUtil.getSessionFactory().getCurrentSession();
+		 FullTextSession fullTextSession = Search.getFullTextSession(session);
+	     try {
+	    	 Transaction tx = fullTextSession.beginTransaction();
+	    	// create native Lucene query unsing the query DSL
+	    	// alternatively you can write the Lucene query using the Lucene query parser
+	    	// or the Lucene programmatic API. The Hibernate Search DSL is recommended though
+	    	QueryBuilder qb = fullTextSession.getSearchFactory()
+	    	    .buildQueryBuilder().forEntity( Users.class ).get();
+	    	org.apache.lucene.search.Query lq = qb.keyword().onFields("name", "email", "role").matching(query).createQuery();
+	   
+	    	// wrap Lucene query in a org.hibernate.Query
+	    	org.hibernate.Query hibQuery = fullTextSession.createFullTextQuery(lq, Users.class);
+
+	    	// execute search
+	    	@SuppressWarnings("unchecked")
+			List<Users> users = hibQuery.setFirstResult(page).setMaxResults(10).list();
+	    	  
+	    	tx.commit();
+	     
+	     return users;
+	      
+	     } catch (RuntimeException e) {
+	         session.getTransaction().rollback();
+	         log.fatal(e.getMessage(), e.fillInStackTrace());
+	         throw e;
+	     }
+	}
+	
+	public static long getUsersCount() {
+		 Session session = SessionFactoryUtil.getSessionFactory().getCurrentSession();
+	     try {
+	     session.getTransaction().begin();
+	     
+	     @SuppressWarnings("unchecked")
+		 long count = (long) session.createCriteria(Users.class).setProjection(Projections.rowCount()).uniqueResult();
+	     session.getTransaction().commit();
+	     
+	     return count;
+	      
+	     } catch (RuntimeException e) {
+	         session.getTransaction().rollback();
+	         log.fatal(e.getMessage(), e.fillInStackTrace());
+	         throw e;
+	     }
+	}
+	
+	public static List<Users> getUsersPage(int page) {
+		 if(page == 1){
+			 page = 0;
+		 } else {
+			 page = (page-1)*10;
+		 }
+		 Session session = SessionFactoryUtil.getSessionFactory().getCurrentSession();
+	     try {
+	     session.getTransaction().begin();
+	     
+	     @SuppressWarnings("unchecked")
+		List<Users> users = session.createCriteria(Users.class).addOrder(Order.desc("id")).setFirstResult(page).setMaxResults(10).list();
+	     session.getTransaction().commit();
+	     
+	     return users;
+	      
+	     } catch (RuntimeException e) {
+	         session.getTransaction().rollback();
+	         log.fatal(e.getMessage(), e.fillInStackTrace());
+	         throw e;
+	     }
+	}
+	
+	public static List<Users> getUsersFilterPage(int page, String name, String email, String role) {
+		 if(page == 1){
+			 page = 0;
+		 } else {
+			 page = (page-1)*10;
+		 }
+		 Session session = SessionFactoryUtil.getSessionFactory().getCurrentSession();
+		 
+	     try {
+	    	session.getTransaction().begin();
+	    	
+	    	if(name != null){
+	    		session.enableFilter("byName").setParameter("nameFilter", '%'+name+'%');
+	    	}
+	    	if(email != null){
+	    		session.enableFilter("byEmail").setParameter("emailFilter", '%'+email+'%');
+	    	}
+	    	if(role != null){
+	    		session.enableFilter("byRole").setParameter("roleFilter", '%'+role+'%');
+	    	}
+	    		    	
+		    @SuppressWarnings("unchecked")
+			List<Users> users = session.createCriteria(Users.class).addOrder(Order.desc("id")).setFirstResult(page).setMaxResults(10).list();
+		    session.getTransaction().commit();
+		     
+	     return users;
+	      
+	     } catch (RuntimeException e) {
+	         session.getTransaction().rollback();
+	         log.fatal(e.getMessage(), e.fillInStackTrace());
+	         throw e;
+	     }
+	}
+	
+	public static int getVenturesFilterCount(String name, String email, String role) {
+
+		 Session session = SessionFactoryUtil.getSessionFactory().getCurrentSession();
+		 
+	     try {
+	    	session.getTransaction().begin();
+		    
+	    	if(name != null){
+	    		session.enableFilter("byName").setParameter("nameFilter", '%'+name+'%');
+	    	}
+	    	if(email != null){
+	    		session.enableFilter("byEmail").setParameter("emailFilter", '%'+email+'%');
+	    	}
+	    	if(role != null){
+	    		session.enableFilter("byRole").setParameter("roleFilter", '%'+role+'%');
+	    	}	    
+	    	
+		    int count = session.createCriteria(Users.class).list().size();
+		    session.getTransaction().commit();
+		     
+	     return count;
+	      
+	     } catch (RuntimeException e) {
+	         session.getTransaction().rollback();
+	         log.fatal(e.getMessage(), e.fillInStackTrace());
+	         throw e;
+	     }
+	}
+
 }

@@ -2212,4 +2212,49 @@ public class RestService {
 		}
 		
 	}
+	
+	@GET
+    @Path("/users/query/{page}")
+    @Produces(MediaType.APPLICATION_JSON)
+    @Formatted
+    public Response getUsersPage(@PathParam("page") int page, @QueryParam("query") String query) {
+		
+		JSONObject pagination = new JSONObject();
+		List<Users> users = null;
+		if(query.length() > 2 && query.length() < 32 ){
+			pagination.put("count", HibernateUtil.getUsersSearchCount(query));
+			users = HibernateUtil.getUsersPage(page, query);
+	    	pagination.put("data", users);
+		} else {
+			pagination.put("count", HibernateUtil.getUsersCount());
+			users = HibernateUtil.getUsersPage(page);
+	    	pagination.put("data", users);
+		}
+       	if(!users.isEmpty()){
+    		return Response.ok(pagination.toString()).header("Access-Control-Allow-Origin", "*").build();
+    	}else{
+    		return Response.status(Response.Status.NO_CONTENT).entity("Could not find any content.").header("Access-Control-Allow-Origin", "*").build();
+    	}        
+    }
+	
+	@GET
+    @Path("/users/filter/{page}")
+    @Produces(MediaType.APPLICATION_JSON)
+    @Formatted
+    public Response getUsersPageFilter(@PathParam("page") int page, @QueryParam("name") String name, @QueryParam("email") String email,
+    		@QueryParam("role") String role
+    		) {
+		
+		JSONObject pagination = new JSONObject();
+		List<Users> users = null;
+		users = HibernateUtil.getUsersFilterPage(page, name, email, role);
+
+       	if(!users.isEmpty()){
+       		pagination.put("count", HibernateUtil.getVenturesFilterCount(name, email, role));
+       		pagination.put("data", users);
+    		return Response.ok(pagination.toString()).header("Access-Control-Allow-Origin", "*").build();
+    	}else{
+    		return Response.status(Response.Status.NO_CONTENT).entity("Could not find any content.").header("Access-Control-Allow-Origin", "*").build();
+    	}        
+    }
 }
