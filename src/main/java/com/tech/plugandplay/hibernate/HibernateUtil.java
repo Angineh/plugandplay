@@ -483,6 +483,20 @@ public class HibernateUtil {
 		}
 	}
 	
+	public static void deleteUser(Users user) {
+		Session session = SessionFactoryUtil.getSessionFactory().getCurrentSession();
+		try {
+			session.getTransaction().begin();		
+			session.delete(user);
+			session.getTransaction().commit();
+		  
+		} catch (RuntimeException e) {
+		     session.getTransaction().rollback();
+		     log.fatal(e.getMessage(), e.fillInStackTrace());
+		     throw e;
+		}
+	}
+	
 	public static void deleteTop100(Top100 top100) {
 		Session session = SessionFactoryUtil.getSessionFactory().getCurrentSession();
 		try {
@@ -673,6 +687,12 @@ public class HibernateUtil {
 	    	// or the Lucene programmatic API. The Hibernate Search DSL is recommended though
 	    	QueryBuilder qb = fullTextSession.getSearchFactory()
 	    	    .buildQueryBuilder().forEntity( Ventures.class ).get();
+	    	//IF QUERY is wrapped in quotes create a phrase query instead of keyword query:
+	    	/*Query luceneQuery = mythQB
+	    		    .phrase()
+	    		    .onField("history")
+	    		    .sentence("Thou shalt not kill")
+	    		    .createQuery();*/
 	    	org.apache.lucene.search.Query lq = qb.keyword().onFields("companyName", "blurb", "verticals", "website", "pnpContact", "contactName", "email", "phoneNumber", "totalMoneyRaised", "stage", "b2bb2c", "employees", "location", "city", "competition", "advantage", "background", "founded", "partnerInterests", "caseStudy", "comments", "tags").matching(query).createQuery();
 	   
 	    	// wrap Lucene query in a org.hibernate.Query
@@ -887,6 +907,13 @@ public class HibernateUtil {
 	    	// or the Lucene programmatic API. The Hibernate Search DSL is recommended though
 	    	QueryBuilder qb = fullTextSession.getSearchFactory()
 	    	    .buildQueryBuilder().forEntity( Ventures.class ).get();
+	    	
+	    	//IF QUERY is wrapped in quotes create a phrase query instead of keyword query:
+	    	/*Query luceneQuery = mythQB
+	    		    .phrase()
+	    		    .onField("history")
+	    		    .sentence("Thou shalt not kill")
+	    		    .createQuery();*/
 	    	org.apache.lucene.search.Query lq = qb.keyword().onFields("companyName", "blurb", "verticals", "website", "pnpContact", "contactName", "email", "phoneNumber", "totalMoneyRaised", "stage", "b2bb2c", "employees", "location", "city", "competition", "advantage", "background", "founded", "partnerInterests", "caseStudy", "comments", "tags").matching(query).createQuery();
 	    	
 	    	// wrap Lucene query in a org.hibernate.Query
@@ -1285,7 +1312,7 @@ public class HibernateUtil {
 	     }
 	}
 	
-		public static Ventures getVenture(int id) {
+	public static Ventures getVenture(int id) {
 		 Session session = SessionFactoryUtil.getSessionFactory().getCurrentSession();
 	     try {
 	     session.getTransaction().begin();
@@ -1294,6 +1321,23 @@ public class HibernateUtil {
 	     session.getTransaction().commit();
 	     
 	     return ventures;
+	      
+	     } catch (RuntimeException e) {
+	         session.getTransaction().rollback();
+	         log.fatal(e.getMessage(), e.fillInStackTrace());
+	         throw e;
+	     }
+	}
+	
+	public static Users getUser(int id) {
+		 Session session = SessionFactoryUtil.getSessionFactory().getCurrentSession();
+	     try {
+	     session.getTransaction().begin();
+	     
+	     Users user = (Users) session.get(Users.class, id);
+	     session.getTransaction().commit();
+	     
+	     return user;
 	      
 	     } catch (RuntimeException e) {
 	         session.getTransaction().rollback();

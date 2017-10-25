@@ -774,7 +774,7 @@ public class RestService {
 		//log.info("JSON body:"+ json);
 		JSONObject body = new JSONObject(json);
 		List<Batch> batchlist = HibernateUtil.getAllBatch(body.getString("listName"));
-		if(batchlist.size()==20){
+		if(batchlist.size()==200){
 			return Response.status(Status.PARTIAL_CONTENT).entity(Constants.GenericErrorMessages.EXCEEDED_SIZE).header("Access-Control-Allow-Origin", "*").build();
 		}
 		//Check to see if part of top100 already
@@ -2257,4 +2257,52 @@ public class RestService {
     		return Response.status(Response.Status.NO_CONTENT).entity("Could not find any content.").header("Access-Control-Allow-Origin", "*").build();
     	}        
     }
+	
+	@POST
+    @Path("/users/delete")
+	@Consumes(MediaType.APPLICATION_JSON)
+	@Produces(MediaType.APPLICATION_JSON)
+	@Formatted
+    public Response deleteUser(String json){
+		
+		JSONObject body = new JSONObject(json);
+		int id = body.getInt("id");
+		Users user = HibernateUtil.getUser(id);
+    	if(user != null){
+    		HibernateUtil.deleteUser(user);
+    		return Response.ok(user).header("Access-Control-Allow-Origin", "*").build();
+    	}else{
+    		return Response.status(Response.Status.NO_CONTENT).entity("Entity not found for ID: " + id).header("Access-Control-Allow-Origin", "*").build();
+    	}
+		
+	}
+	
+	@POST
+	@Path("/users/update")
+    @Consumes(MediaType.APPLICATION_JSON)
+    @Produces(MediaType.APPLICATION_JSON)
+    @Formatted
+    public Response updateUser(String json) {
+		
+		//log.info("JSON body:"+ json);
+		JSONObject body = new JSONObject(json);
+		
+		Users user = HibernateUtil.getUser(body.getInt("id"));
+		
+		if(user == null){
+			return Response.status(Status.NO_CONTENT).entity("Could not find user with id "+body.getInt("id")+" to update!").header("Access-Control-Allow-Origin", "*").build();
+		}
+		if(!body.isNull("email")){
+			user.setEmail(body.getString("email"));
+		}
+		if(!body.isNull("name")){
+			user.setName(body.getString("name"));			
+		}
+		if(!body.isNull("role")){
+			user.setRole(body.getString("role"));
+		}
+		
+		HibernateUtil.updateUser(user);
+		return Response.ok(user).header("Access-Control-Allow-Origin", "*").build();
+	}
 }
