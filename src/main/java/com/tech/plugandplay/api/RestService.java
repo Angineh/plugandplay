@@ -125,17 +125,19 @@ public class RestService {
     		@QueryParam("b2b b2c") String b2bb2c, @QueryParam("employees") String employees, @QueryParam("city") String city,
     		@QueryParam("competition") String competition, @QueryParam("advantage") String advantage, @QueryParam("background") String background,
     		@QueryParam("founded") String founded, @QueryParam("partner interests") String partnerInterests, @QueryParam("case study") String caseStudy, 
-    		@QueryParam("comments") String comments, @QueryParam("date of investment") String dateOfInvestment
-    		) {
+    		@QueryParam("comments") String comments, @QueryParam("date of investment") String dateOfInvestment,
+    		@QueryParam("pnp office") String pnpOffice, @QueryParam("one liner") String oneLiner, @QueryParam("investors") String investors,
+    		@QueryParam("how did you hear") String howDidYouHear, @QueryParam("intl business opp") String intlBusinessOpp
+    		) { 
 		
 		JSONObject pagination = new JSONObject();
 		List<Ventures> ventures = null;
 		ventures = HibernateUtil.getVenturesFilterPage(page, companyName, verticals, tags, stage, blurb, location, website, pnpContact, contactName, phoneNumber, totalMoneyRaised,
-				b2bb2c, employees, city, competition, advantage, background, founded, partnerInterests, caseStudy, comments, dateOfInvestment);
+				b2bb2c, employees, city, competition, advantage, background, founded, partnerInterests, caseStudy, comments, dateOfInvestment, pnpOffice, oneLiner, investors, howDidYouHear, intlBusinessOpp);
 
        	if(!ventures.isEmpty()){
        		pagination.put("count", HibernateUtil.getVenturesFilterCount(companyName, verticals, tags, stage, blurb, location, website, pnpContact, contactName, phoneNumber, totalMoneyRaised,
-       				b2bb2c, employees, city, competition, advantage, background, founded, partnerInterests, caseStudy, comments, dateOfInvestment));
+       				b2bb2c, employees, city, competition, advantage, background, founded, partnerInterests, caseStudy, comments, dateOfInvestment, pnpOffice, oneLiner, investors, howDidYouHear, intlBusinessOpp));
        		pagination.put("data", ventures);
     		return Response.ok(pagination.toString()).header("Access-Control-Allow-Origin", "*").build();
     	}else{
@@ -1533,85 +1535,15 @@ public class RestService {
 		String tags = "33005691";//
 		String materials = "32472224";//
 		String logo = "50982627";//
+		String pnpOffice = "63534283";
+		String oneLiner = "59324724";
+		String investors = "50981860";
+		String intlBusinessOpp = "61049500";
+		String howDidYouHear = "43407402";
 		BufferedImage originalImage = null;
 		String logo_url = null;
 		String extension = "";
 		Boolean canRead = new Boolean(true);
-		
-		/*for (int i = 0; i < fields.length(); i++) {
-			if(fields.getJSONObject(i).getString("title").contains("Select some tags")){
-				tags = fields.getJSONObject(i).getString("id");
-			}
-			if(fields.getJSONObject(i).getString("title").contains("Example of a case study")){
-				caseStudy = fields.getJSONObject(i).getString("id");
-			}
-			if(fields.getJSONObject(i).getString("title").contains("Who from Plug and Play")){
-				pnpContact = fields.getJSONObject(i).getString("id");
-			}
-			if(fields.getJSONObject(i).getString("title").contains("Name of Company")){
-				companyName = fields.getJSONObject(i).getString("id");
-			}
-			if(fields.getJSONObject(i).getString("title").contains("Company website")){
-				website = fields.getJSONObject(i).getString("id");
-			}
-			if(fields.getJSONObject(i).getString("title").contains("Stage of Company")){
-				stage = fields.getJSONObject(i).getString("id");
-			}
-			if(fields.getJSONObject(i).getString("title").contains("Founders' Background")){
-				background = fields.getJSONObject(i).getString("id");
-			}
-			if(fields.getJSONObject(i).getString("title").contains("Industrial Applications")){
-				verticals = fields.getJSONObject(i).getString("id");
-			}
-			if(fields.getJSONObject(i).getString("title").contains("Any other information or comments")){
-				comments = fields.getJSONObject(i).getString("id");
-			}
-			if(fields.getJSONObject(i).getString("title").contains("Email for")){
-				email = fields.getJSONObject(i).getString("id");
-			}
-			if(fields.getJSONObject(i).getString("title").contains("Total Money Raised")){
-				totalMoneyRaised = fields.getJSONObject(i).getString("id");
-			}
-			if(fields.getJSONObject(i).getString("title").contains("Specify Country and City of Headquarters")){
-				city = fields.getJSONObject(i).getString("id");
-			}
-			if(fields.getJSONObject(i).getString("title").contains("Competitive Advantage")){
-				advantage = fields.getJSONObject(i).getString("id");
-			}
-			if(fields.getJSONObject(i).getString("title").contains("company founded")){
-				founded = fields.getJSONObject(i).getString("id");
-			}
-			if(fields.getJSONObject(i).getString("title").contains("Name of primary contact")){
-				contactName = fields.getJSONObject(i).getString("id");
-			}
-			if(fields.getJSONObject(i).getString("title").contains("Blurb")){
-				blurb = fields.getJSONObject(i).getString("id");
-			}
-			if(fields.getJSONObject(i).getString("title").contains("Closest competitor")){
-				competition = fields.getJSONObject(i).getString("id");
-			}
-			if(fields.getJSONObject(i).getString("title").contains("end customer")){
-				b2bb2c = fields.getJSONObject(i).getString("id");
-			}
-			if(fields.getJSONObject(i).getString("title").contains("partners that you would")){
-				partnerInterests = fields.getJSONObject(i).getString("id");
-			}
-			if(fields.getJSONObject(i).getString("title").contains("Contact Number")){
-				phoneNumber = fields.getJSONObject(i).getString("id");
-			}
-			if(fields.getJSONObject(i).getString("title").contains("Number of Employees")){
-				employees = fields.getJSONObject(i).getString("id");
-			}
-			if(fields.getJSONObject(i).getString("title").contains("Where is your Headquarters?")){
-				location = fields.getJSONObject(i).getString("id");
-			}
-			if(fields.getJSONObject(i).getString("title").contains("Please upload your company materials")){
-				materials = fields.getJSONObject(i).getString("id");
-			}
-			if(fields.getJSONObject(i).getString("title").contains("Please upload your logo")){
-				logo = fields.getJSONObject(i).getString("id");
-			}
-		}*/
 		
 		for (int i = 0; i < answers.length(); i++) {
 			if(answers.getJSONObject(i).getJSONObject("field").getString("id").equals(tags)){
@@ -1626,6 +1558,7 @@ public class RestService {
 				}
 				venture.setTags(String.join(",",list));
 			}
+			
 			if(answers.getJSONObject(i).getJSONObject("field").getString("id").equals(caseStudy)){
 				venture.setCaseStudy(answers.getJSONObject(i).getString("text"));
 			}
@@ -1708,6 +1641,25 @@ public class RestService {
 			}
 			if(answers.getJSONObject(i).getJSONObject("field").getString("id").equals(location)){
 				venture.setLocation(answers.getJSONObject(i).getJSONObject("choice").getString("label"));
+			}
+			if(answers.getJSONObject(i).getJSONObject("field").getString("id").equals(pnpOffice)){
+				venture.setPnpOffice(answers.getJSONObject(i).getJSONObject("choice").getString("label"));
+			}
+			if(answers.getJSONObject(i).getJSONObject("field").getString("id").equals(oneLiner)){
+				venture.setOneLiner(answers.getJSONObject(i).getString("text"));
+			}
+			if(answers.getJSONObject(i).getJSONObject("field").getString("id").equals(investors)){
+				venture.setInvestors(answers.getJSONObject(i).getString("text"));
+			}
+			if(answers.getJSONObject(i).getJSONObject("field").getString("id").equals(intlBusinessOpp)){
+				List<String> list = new ArrayList<String>();		
+				for(int j = 0; j < answers.getJSONObject(i).getJSONObject("choices").getJSONArray("labels").length(); j++){
+				    list.add(answers.getJSONObject(i).getJSONObject("choices").getJSONArray("labels").getString(j));
+				}
+				venture.setIntlBusinessOpp(String.join(",",list));	
+			}
+			if(answers.getJSONObject(i).getJSONObject("field").getString("id").equals(howDidYouHear)){
+				venture.setHowDidYouHear(answers.getJSONObject(i).getJSONObject("choice").getString("label"));
 			}
 			if(answers.getJSONObject(i).getJSONObject("field").getString("id").equals(materials)){
 				venture.setMaterials(answers.getJSONObject(i).getString("file_url"));
@@ -1800,6 +1752,11 @@ public class RestService {
 		String tags = "33005691";//
 		String materials = "32472224";//
 		String logo = "50982627";//
+		String pnpOffice = "63534283";
+		String oneLiner = "59324724";
+		String investors = "50981860";
+		String intlBusinessOpp = "61049500";
+		String howDidYouHear = "43407402";
 		BufferedImage originalImage = null;
 		String logo_url = null;
 		String extension = "";
@@ -1909,6 +1866,25 @@ public class RestService {
 			if(answers.getJSONObject(i).getJSONObject("field").getString("id").equals(location)){
 				venture.setLocation(answers.getJSONObject(i).getJSONObject("choice").getString("label"));
 			}
+			if(answers.getJSONObject(i).getJSONObject("field").getString("id").equals(pnpOffice)){
+				venture.setPnpOffice(answers.getJSONObject(i).getJSONObject("choice").getString("label"));
+			}
+			if(answers.getJSONObject(i).getJSONObject("field").getString("id").equals(oneLiner)){
+				venture.setOneLiner(answers.getJSONObject(i).getString("text"));
+			}
+			if(answers.getJSONObject(i).getJSONObject("field").getString("id").equals(investors)){
+				venture.setInvestors(answers.getJSONObject(i).getString("text"));
+			}
+			if(answers.getJSONObject(i).getJSONObject("field").getString("id").equals(intlBusinessOpp)){
+				List<String> list = new ArrayList<String>();		
+				for(int j = 0; j < answers.getJSONObject(i).getJSONObject("choices").getJSONArray("labels").length(); j++){
+				    list.add(answers.getJSONObject(i).getJSONObject("choices").getJSONArray("labels").getString(j));
+				}
+				venture.setIntlBusinessOpp(String.join(",",list));	
+			}
+			if(answers.getJSONObject(i).getJSONObject("field").getString("id").equals(howDidYouHear)){
+				venture.setHowDidYouHear(answers.getJSONObject(i).getJSONObject("choice").getString("label"));
+			}
 			if(answers.getJSONObject(i).getJSONObject("field").getString("id").equals(materials)){
 				venture.setMaterials(answers.getJSONObject(i).getString("file_url"));
 			}
@@ -2014,6 +1990,10 @@ public class RestService {
 		String password = body.getString("password");
 		String api_key = "";
 		String emailpass = "";
+		Boolean hasRole = false;
+		if(!body.isNull("role")){
+			hasRole = true;
+		}
 		Users user = new Users();
 		List<Users> check = HibernateUtil.getUserByEmail(email);
 		if(!check.isEmpty()){
@@ -2029,10 +2009,23 @@ public class RestService {
 		if(body.has("api_key")){
 			api_key = body.getString("api_key");
 		}		
-		//Different roles are: admin, user, startup, corporation
+		//Different roles are: admin, venture, global, user, startup, corporation
 		if(api_key.equals("f7d624c2-f89e-40b9-9e4b-ff2db471a998")){
 			// This mean an administrator is trying to add a user.
-			user.setRole("user");
+			if(hasRole){
+				user.setRole(body.getString("role"));
+				if(!body.isNull("pnpOffice")){					
+					JSONArray pnpOffices = body.getJSONArray("pnpOffice");
+					String[] tmp = new String[pnpOffices.length()];
+					for(int i = 0; i < pnpOffices.length(); i++){
+						tmp[i] = pnpOffices.getString(i);
+					}
+					user.setPnpOffice(String.join(",", tmp));			
+				}
+			}else{
+				user.setRole("user");
+			}		
+			
 			user.setRef_id(0);
 			String pass = RandomStringUtils.randomAlphanumeric(8);
 			user.setPassword(Crypto.getHash(pass));
@@ -2149,6 +2142,7 @@ public class RestService {
 			response.setPassword(user.getPassword());
 			response.setRole(user.getRole());
 			response.setRef_id(user.getRef_id());
+			response.setPnpOffice(user.getPnpOffice());
 			response.setVerified(user.isVerified());
 			response.setToken(CommonUtil.createJWT(user.getName()));
 			return Response.ok(response).header("Access-Control-Allow-Origin", "*").build();
@@ -2300,6 +2294,14 @@ public class RestService {
 		}
 		if(!body.isNull("role")){
 			user.setRole(body.getString("role"));
+		}
+		if(!body.isNull("pnpOffice")){					
+			JSONArray pnpOffices = body.getJSONArray("pnpOffice");
+			String[] tmp = new String[pnpOffices.length()];
+			for(int i = 0; i < pnpOffices.length(); i++){
+				tmp[i] = pnpOffices.getString(i);
+			}
+			user.setPnpOffice(String.join(",", tmp));			
 		}
 		
 		HibernateUtil.updateUser(user);

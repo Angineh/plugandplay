@@ -64,7 +64,13 @@ import org.ocpsoft.pretty.time.PrettyTime;
 	@FilterDef(name = "byPartnerInterests", parameters=@ParamDef( name = "partnerInterestsFilter", type = "string")),
 	@FilterDef(name = "byCaseStudy", parameters=@ParamDef( name = "caseStudyFilter", type = "string")),
 	@FilterDef(name = "byComments", parameters=@ParamDef( name = "commentsFilter", type = "string")),
-	@FilterDef(name = "byDateOfInvestment", parameters=@ParamDef( name = "dateOfInvestmentFilter", type = "string"))
+	@FilterDef(name = "byDateOfInvestment", parameters=@ParamDef( name = "dateOfInvestmentFilter", type = "string")),
+	@FilterDef(name = "byPnpOffice", parameters=@ParamDef( name = "pnpOfficeFilter", type = "string")),
+	@FilterDef(name = "byOneLiner", parameters=@ParamDef( name = "oneLinerFilter", type = "string")),
+	@FilterDef(name = "byInvestors", parameters=@ParamDef( name = "investorsFilter", type = "string")),
+	@FilterDef(name = "byHowDidYouHear", parameters=@ParamDef( name = "howDidYouHearFilter", type = "string")),
+	@FilterDef(name = "byIntlBusinessOpp", parameters=@ParamDef( name = "intlBusinessOppFilter", type = "string"))
+	
 })
 @Filters({ 
 	@Filter(name="byCompanyName", condition="COMPANY_NAME like :companyNameFilter"),
@@ -88,7 +94,12 @@ import org.ocpsoft.pretty.time.PrettyTime;
 	@Filter(name="byPartnerInterests", condition="PARTNER_INTERESTS like :partnerInterestsFilter"),
 	@Filter(name="byCaseStudy", condition="CASE_STUDY like :caseStudyFilter"),
 	@Filter(name="byComments", condition="COMMENTS like :commentsFilter"),
-	@Filter(name="byDateOfInvestment", condition="DATE_OF_INVESTMENT like :dateOfInvestmentFilter")
+	@Filter(name="byDateOfInvestment", condition="DATE_OF_INVESTMENT like :dateOfInvestmentFilter"),
+	@Filter(name="byPnpOffice", condition="PNP_OFFICE like :pnpOfficeFilter"),
+	@Filter(name="byOneLiner", condition="ONE_LINER like :pnpOfficeFilter"),
+	@Filter(name="byInvestors", condition="INVESTORS like :investorsFilter"),
+	@Filter(name="byHowDidYouHear", condition="HOW_DID_YOU_HEAR like :howDidYouHearFilter"),
+	@Filter(name="byIntlBusinessOpp", condition="INTL_BUSINESS_OPP like :intlBusinessOppFilter"),
 	
 	
 })
@@ -171,6 +182,20 @@ public class Ventures implements Serializable {
 	@Field(index=Index.YES, analyze=Analyze.YES, store=Store.NO)
 	@Column(name="TAGS")
 	private String tags;
+	@Field(index=Index.YES, analyze=Analyze.YES, store=Store.NO)
+	@Column(name="PNP_OFFICE")
+	private String pnpOffice;
+	@Field(index=Index.YES, analyze=Analyze.YES, store=Store.NO)
+	@Column(name="ONE_LINER")
+	private String oneLiner;
+	@Field(index=Index.YES, analyze=Analyze.YES, store=Store.NO)
+	@Column(name="INVESTORS")
+	private String investors;
+	@Field(index=Index.YES, analyze=Analyze.YES, store=Store.NO)
+	@Column(name="HOW_DID_YOU_HEAR")
+	private String howDidYouHear;
+	@Column(name="INTL_BUSINESS_OPP")
+	private String intlBusinessOpp;
 	@Column(name="MATERIALS")
 	private String materials;
 	@Column(name="DATE_OF_INVESTMENT")
@@ -348,6 +373,37 @@ public class Ventures implements Serializable {
 	}
 	public void setTags(String tags) {
 		this.tags = tags;
+	}
+	
+	public String getPnpOffice() {
+		return pnpOffice;
+	}
+	public void setPnpOffice(String pnpOffice) {
+		this.pnpOffice = pnpOffice;
+	}
+	public String getOneLiner() {
+		return oneLiner;
+	}
+	public void setOneLiner(String oneLiner) {
+		this.oneLiner = oneLiner;
+	}
+	public String getInvestors() {
+		return investors;
+	}
+	public void setInvestors(String investors) {
+		this.investors = investors;
+	}
+	public String getHowDidYouHear() {
+		return howDidYouHear;
+	}
+	public void setHowDidYouHear(String howDidYouHear) {
+		this.howDidYouHear = howDidYouHear;
+	}
+	public String getIntlBusinessOpp() {
+		return intlBusinessOpp;
+	}
+	public void setIntlBusinessOpp(String intlBusinessOpp) {
+		this.intlBusinessOpp = intlBusinessOpp;
 	}
 	public String getMaterials() {
 		return materials;

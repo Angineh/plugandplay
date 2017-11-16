@@ -57,7 +57,9 @@ public class Users implements Serializable {
 	private String password;
 	@Field(index=Index.YES, analyze=Analyze.YES, store=Store.NO)
 	@Column(name="ROLE")
-	private String role; //admin, user, startup, corporation
+	private String role; //admin, venture, global, user, startup, corporation
+	@Column(name="PNP_OFFICE") //comma separated list of offices
+	private String pnpOffice;
 	@Column(name="API_KEY")
 	private String api_key;
 	@Column(name="REF_ID")
@@ -131,5 +133,11 @@ public class Users implements Serializable {
 	public void setToken(String token) {
 		this.token = token;
 	}
+	public String getPnpOffice() {
+		return pnpOffice;
+	}
+	public void setPnpOffice(String pnpOffice) {
+		this.pnpOffice = pnpOffice;
+	}	
 	
 }

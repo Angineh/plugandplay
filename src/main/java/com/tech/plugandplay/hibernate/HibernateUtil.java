@@ -716,8 +716,8 @@ public class HibernateUtil {
 	public static List<Ventures> getVenturesFilterPage(int page, String companyName, String verticals, String tags, String stage, String blurb, 
 			String location, String website, String pnpContact, String contactName, String phoneNumber, String totalMoneyRaised,
 			String b2bb2c, String employees, String city, String competition, String advantage, String background, String founded,
-			String partnerInterests, String caseStudy, String comments, String dateOfInvestment) {
-		 if(page == 1){
+			String partnerInterests, String caseStudy, String comments, String dateOfInvestment, String pnpOffice, String oneLiner, String investors, String howDidYouHear, String intlBusinessOpp) {
+		 if(page == 1){//String pnpOffice, String oneLiner, String investors, String howDidYouHear, String intlBusinessOpp
 			 page = 0;
 		 } else {
 			 page = (page-1)*10;
@@ -793,6 +793,22 @@ public class HibernateUtil {
 	    	if(dateOfInvestment != null){
 	    		session.enableFilter("byDateOfInvestment").setParameter("dateOfInvestmentFilter", '%'+dateOfInvestment+'%');
 	    	}
+	    	if(pnpOffice != null){
+	    		session.enableFilter("byPnpOffice").setParameter("pnpOfficeFilter", '%'+pnpOffice+'%');
+	    	}
+	    	if(oneLiner != null){
+	    		session.enableFilter("byOneLiner").setParameter("oneLinerFilter", '%'+oneLiner+'%');
+	    	}
+	    	if(investors != null){
+	    		session.enableFilter("byInvestors").setParameter("investorsFilter", '%'+investors+'%');
+	    	}
+	    	if(howDidYouHear != null){
+	    		session.enableFilter("byHowDidYouHear").setParameter("howDidYouHearFilter", '%'+howDidYouHear+'%');
+	    	}
+	    	if(intlBusinessOpp != null){
+	    		session.enableFilter("byIntlBusinessOpp").setParameter("intlBusinessOppFilter", '%'+intlBusinessOpp+'%');
+	    	}
+	    	
 	    	
 		    @SuppressWarnings("unchecked")
 			List<Ventures> ventures = session.createCriteria(Ventures.class).addOrder(Order.desc("id")).setFirstResult(page).setMaxResults(10).list();
@@ -810,7 +826,7 @@ public class HibernateUtil {
 	public static int getVenturesFilterCount(String companyName, String verticals, String tags, String stage, String blurb, 
 			String location, String website, String pnpContact, String contactName, String phoneNumber, String totalMoneyRaised,
 			String b2bb2c, String employees, String city, String competition, String advantage, String background, String founded,
-			String partnerInterests, String caseStudy, String comments, String dateOfInvestment) {
+			String partnerInterests, String caseStudy, String comments, String dateOfInvestment, String pnpOffice, String oneLiner, String investors, String howDidYouHear, String intlBusinessOpp) {
 
 		 Session session = SessionFactoryUtil.getSessionFactory().getCurrentSession();
 		 
@@ -882,6 +898,21 @@ public class HibernateUtil {
 	    	}
 	    	if(dateOfInvestment != null){
 	    		session.enableFilter("byDateOfInvestment").setParameter("dateOfInvestmentFilter", '%'+dateOfInvestment+'%');
+	    	}
+	    	if(pnpOffice != null){
+	    		session.enableFilter("byPnpOffice").setParameter("pnpOfficeFilter", '%'+pnpOffice+'%');
+	    	}
+	    	if(oneLiner != null){
+	    		session.enableFilter("byOneLiner").setParameter("oneLinerFilter", '%'+oneLiner+'%');
+	    	}
+	    	if(investors != null){
+	    		session.enableFilter("byInvestors").setParameter("investorsFilter", '%'+investors+'%');
+	    	}
+	    	if(howDidYouHear != null){
+	    		session.enableFilter("byHowDidYouHear").setParameter("howDidYouHearFilter", '%'+howDidYouHear+'%');
+	    	}
+	    	if(intlBusinessOpp != null){
+	    		session.enableFilter("byIntlBusinessOpp").setParameter("intlBusinessOppFilter", '%'+intlBusinessOpp+'%');
 	    	}
 	    	
 		    int count = session.createCriteria(Ventures.class).list().size();
