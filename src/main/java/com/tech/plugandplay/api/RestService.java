@@ -94,18 +94,37 @@ public class RestService {
     @Path("/ventures/query/{page}")
     @Produces(MediaType.APPLICATION_JSON)
     @Formatted
-    public Response getVenturesPage(@PathParam("page") int page, @QueryParam("query") String query) {
+    public Response getVenturesPage(@PathParam("page") int page, @QueryParam("query") String query) { //, @QueryParam("pnpOffices") String pnpOffices
 		
 		JSONObject pagination = new JSONObject();
 		List<Ventures> ventures = null;
 		if(query.length() > 2 && query.length() < 32 ){
-			pagination.put("count", HibernateUtil.getVenturesSearchCount(query));
-	    	ventures = HibernateUtil.getVenturesPage(page, query);
-	    	pagination.put("data", ventures);
+			
+			/*if(pnpOffices != null){
+				//TODO this doesn't work need full text filters I believe
+				pagination.put("count", HibernateUtil.getVenturesSearchCountOffice(query, pnpOffices));
+				ventures = HibernateUtil.getVenturesPageOffice(page, query, pnpOffices);
+				pagination.put("data", ventures);
+			}else{*/
+				pagination.put("count", HibernateUtil.getVenturesSearchCount(query));
+				ventures = HibernateUtil.getVenturesPage(page, query);
+				pagination.put("data", ventures);
+			//}  	
+	    	
 		} else {
-			pagination.put("count", HibernateUtil.getVenturesCount());
-	    	ventures = HibernateUtil.getVenturesPage(page);
-	    	pagination.put("data", ventures);
+			/*if(pnpOffices != null){
+				pagination.put("count", HibernateUtil.getVenturesCountOffice(pnpOffices));
+		    	ventures = HibernateUtil.getVenturesPageOffice(page, pnpOffices);
+		    	pagination.put("data", ventures);
+
+			} else {*/
+				pagination.put("count", HibernateUtil.getVenturesCount());
+		    	ventures = HibernateUtil.getVenturesPage(page);
+		    	pagination.put("data", ventures);
+		    	
+			//}
+			
+			
 		}
        	if(!ventures.isEmpty()){
     		return Response.ok(pagination.toString()).header("Access-Control-Allow-Origin", "*").build();
@@ -127,17 +146,18 @@ public class RestService {
     		@QueryParam("founded") String founded, @QueryParam("partner interests") String partnerInterests, @QueryParam("case study") String caseStudy, 
     		@QueryParam("comments") String comments, @QueryParam("date of investment") String dateOfInvestment,
     		@QueryParam("pnp office") String pnpOffice, @QueryParam("one liner") String oneLiner, @QueryParam("investors") String investors,
-    		@QueryParam("how did you hear") String howDidYouHear, @QueryParam("intl business opp") String intlBusinessOpp
+    		@QueryParam("how did you hear") String howDidYouHear, @QueryParam("intl business opp") String intlBusinessOpp,
+    		@QueryParam("pnpOffices") String pnpOffices
     		) { 
 		
 		JSONObject pagination = new JSONObject();
 		List<Ventures> ventures = null;
 		ventures = HibernateUtil.getVenturesFilterPage(page, companyName, verticals, tags, stage, blurb, location, website, pnpContact, contactName, phoneNumber, totalMoneyRaised,
-				b2bb2c, employees, city, competition, advantage, background, founded, partnerInterests, caseStudy, comments, dateOfInvestment, pnpOffice, oneLiner, investors, howDidYouHear, intlBusinessOpp);
+				b2bb2c, employees, city, competition, advantage, background, founded, partnerInterests, caseStudy, comments, dateOfInvestment, pnpOffice, oneLiner, investors, howDidYouHear, intlBusinessOpp, pnpOffices);
 
        	if(!ventures.isEmpty()){
        		pagination.put("count", HibernateUtil.getVenturesFilterCount(companyName, verticals, tags, stage, blurb, location, website, pnpContact, contactName, phoneNumber, totalMoneyRaised,
-       				b2bb2c, employees, city, competition, advantage, background, founded, partnerInterests, caseStudy, comments, dateOfInvestment, pnpOffice, oneLiner, investors, howDidYouHear, intlBusinessOpp));
+       				b2bb2c, employees, city, competition, advantage, background, founded, partnerInterests, caseStudy, comments, dateOfInvestment, pnpOffice, oneLiner, investors, howDidYouHear, intlBusinessOpp, pnpOffices));
        		pagination.put("data", ventures);
     		return Response.ok(pagination.toString()).header("Access-Control-Allow-Origin", "*").build();
     	}else{
@@ -2307,4 +2327,5 @@ public class RestService {
 		HibernateUtil.updateUser(user);
 		return Response.ok(user).header("Access-Control-Allow-Origin", "*").build();
 	}
+	
 }
