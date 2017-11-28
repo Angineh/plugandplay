@@ -11,6 +11,7 @@ import org.hibernate.Transaction;
 import org.hibernate.criterion.Order;
 import org.hibernate.criterion.Projections;
 import org.hibernate.criterion.Restrictions;
+import org.hibernate.search.FullTextQuery;
 import org.hibernate.search.FullTextSession;
 import org.hibernate.search.Search;
 import org.hibernate.search.query.dsl.QueryBuilder;
@@ -661,6 +662,60 @@ public class HibernateUtil {
 	     }
 	}
 	
+	public static List<Ventures> getVenturesPageOffice(int page, String pnpOffices) {
+		 if(page == 1){
+			 page = 0;
+		 } else {
+			 page = (page-1)*10;
+		 }
+		 Session session = SessionFactoryUtil.getSessionFactory().getCurrentSession();
+	     try {
+	     session.getTransaction().begin();
+	     if(pnpOffices != null){
+			 session.enableFilter("byPnpOffices").setParameter("pnpOfficesFilter", pnpOffices);
+	     }
+	     
+	     @SuppressWarnings("unchecked")
+		List<Ventures> ventures = session.createCriteria(Ventures.class).addOrder(Order.desc("id")).setFirstResult(page).setMaxResults(10).list();
+	     session.getTransaction().commit();
+	     
+	     return ventures;
+	      
+	     } catch (RuntimeException e) {
+	         session.getTransaction().rollback();
+	         log.fatal(e.getMessage(), e.fillInStackTrace());
+	         throw e;
+	     }
+	}
+	
+	public static List<Ventures> getVenturesPage(int page, String [] pnpOffices) {
+		 if(page == 1){
+			 page = 0;
+		 } else {
+			 page = (page-1)*10;
+		 }
+		 Session session = SessionFactoryUtil.getSessionFactory().getCurrentSession();
+	     try {
+	     session.getTransaction().begin();
+	     if(pnpOffices != null){
+	    	 for(int i = 0; i < pnpOffices.length; i++){
+	    		 session.enableFilter("byPnpOffice").setParameter("pnpOfficeFilter", pnpOffices[i]); 
+	    	 } 		
+		 }
+	     
+	     @SuppressWarnings("unchecked")
+		List<Ventures> ventures = session.createCriteria(Ventures.class).addOrder(Order.desc("id")).setFirstResult(page).setMaxResults(10).list();
+	     session.getTransaction().commit();
+	     
+	     return ventures;
+	      
+	     } catch (RuntimeException e) {
+	         session.getTransaction().rollback();
+	         log.fatal(e.getMessage(), e.fillInStackTrace());
+	         throw e;
+	     }
+	}
+	
 	public static void updateLuceneIndex() {
 		 Session session = SessionFactoryUtil.getSessionFactory().getCurrentSession();
 		 FullTextSession fullTextSession = Search.getFullTextSession(session);
@@ -713,10 +768,59 @@ public class HibernateUtil {
 	     }
 	}
 	
+	public static List<Ventures> getVenturesPageOffice(int page, String query, String pnpOffices) {
+		 if(page == 1){
+			 page = 0;
+		 } else {
+			 page = (page-1)*10;
+		 }
+		 Session session = SessionFactoryUtil.getSessionFactory().getCurrentSession();
+		 //session.getTransaction().begin();
+		/* if(pnpOffices != null){
+    		 session.enableFilter("byPnpOffices").setParameter("pnpOfficesFilter", pnpOffices);
+	     }*/
+		 
+		 FullTextSession fullTextSession = Search.getFullTextSession(session);
+	     try {
+	    	 Transaction tx = fullTextSession.beginTransaction();
+	    	
+	    	// create native Lucene query unsing the query DSL
+	    	// alternatively you can write the Lucene query using the Lucene query parser
+	    	// or the Lucene programmatic API. The Hibernate Search DSL is recommended though
+	    	QueryBuilder qb = fullTextSession.getSearchFactory()
+	    	    .buildQueryBuilder().forEntity( Ventures.class ).get();
+	    	//IF QUERY is wrapped in quotes create a phrase query instead of keyword query:
+	    	/*Query luceneQuery = mythQB
+	    		    .phrase()
+	    		    .onField("history")
+	    		    .sentence("Thou shalt not kill")
+	    		    .createQuery();*/
+	    	org.apache.lucene.search.Query lq = qb.keyword().onFields("companyName", "blurb", "verticals", "website", "pnpContact", "contactName", "email", "phoneNumber", "totalMoneyRaised", "stage", "b2bb2c", "employees", "location", "city", "competition", "advantage", "background", "founded", "partnerInterests", "caseStudy", "comments", "tags").matching(query).createQuery();
+	    	
+	    	// wrap Lucene query in a org.hibernate.Query
+	    	org.hibernate.Query hibQuery = fullTextSession.createFullTextQuery(lq, Ventures.class);
+	    	//((FullTextQuery) hibQuery).enableFullTextFilter("security").setParameter( "pnpOffices", pnpOffices.split("\\s*,\\s*") );
+	    	fullTextSession.enableFilter("byPnpOffices").setParameter("pnpOfficesFilter", pnpOffices);
+	    	// execute search
+	    	@SuppressWarnings("unchecked")
+			List<Ventures> ventures = hibQuery.setFirstResult(page).setMaxResults(10).list();
+	    	  
+	    	tx.commit();
+	     
+	     return ventures;
+	      
+	     } catch (RuntimeException e) {
+	         session.getTransaction().rollback();
+	         log.fatal(e.getMessage(), e.fillInStackTrace());
+	         throw e;
+	     }
+	}
+	
 	public static List<Ventures> getVenturesFilterPage(int page, String companyName, String verticals, String tags, String stage, String blurb, 
 			String location, String website, String pnpContact, String contactName, String phoneNumber, String totalMoneyRaised,
 			String b2bb2c, String employees, String city, String competition, String advantage, String background, String founded,
-			String partnerInterests, String caseStudy, String comments, String dateOfInvestment, String pnpOffice, String oneLiner, String investors, String howDidYouHear, String intlBusinessOpp) {
+			String partnerInterests, String caseStudy, String comments, String dateOfInvestment, String pnpOffice, String oneLiner, String investors, String howDidYouHear, String intlBusinessOpp,
+			String pnpOffices) {
 		 if(page == 1){//String pnpOffice, String oneLiner, String investors, String howDidYouHear, String intlBusinessOpp
 			 page = 0;
 		 } else {
@@ -727,6 +831,9 @@ public class HibernateUtil {
 	     try {
 	    	session.getTransaction().begin();
 	    	
+	    	if(pnpOffices != null){
+	    		 session.enableFilter("byPnpOffices").setParameter("pnpOfficesFilter", pnpOffices);
+		    }
 	    	if(companyName != null){
 	    		session.enableFilter("byCompanyName").setParameter("companyNameFilter", '%'+companyName+'%');
 	    	}
@@ -826,13 +933,17 @@ public class HibernateUtil {
 	public static int getVenturesFilterCount(String companyName, String verticals, String tags, String stage, String blurb, 
 			String location, String website, String pnpContact, String contactName, String phoneNumber, String totalMoneyRaised,
 			String b2bb2c, String employees, String city, String competition, String advantage, String background, String founded,
-			String partnerInterests, String caseStudy, String comments, String dateOfInvestment, String pnpOffice, String oneLiner, String investors, String howDidYouHear, String intlBusinessOpp) {
+			String partnerInterests, String caseStudy, String comments, String dateOfInvestment, String pnpOffice, String oneLiner, String investors, String howDidYouHear, String intlBusinessOpp,
+			String pnpOffices) {
 
 		 Session session = SessionFactoryUtil.getSessionFactory().getCurrentSession();
 		 
 	     try {
 	    	session.getTransaction().begin();
 		    
+	    	if(pnpOffices != null){
+	    		 session.enableFilter("byPnpOffices").setParameter("pnpOfficesFilter", pnpOffices);
+	    	}
 	    	if(companyName != null){
 	    		session.enableFilter("byCompanyName").setParameter("companyNameFilter", '%'+companyName+'%');
 	    	}
@@ -961,10 +1072,68 @@ public class HibernateUtil {
 	     }
 	}
 	
+	public static int getVenturesSearchCountOffice(String query, String pnpOffices) {
+		 Session session = SessionFactoryUtil.getSessionFactory().getCurrentSession();
+		 FullTextSession fullTextSession = Search.getFullTextSession(session);
+	     try {
+	    	 Transaction tx = fullTextSession.beginTransaction();
+	    	 if(pnpOffices != null){
+	    		 session.enableFilter("byPnpOffices").setParameter("pnpOfficesFilter", pnpOffices);
+		     }
+	    	// create native Lucene query unsing the query DSL
+	    	// alternatively you can write the Lucene query using the Lucene query parser
+	    	// or the Lucene programmatic API. The Hibernate Search DSL is recommended though
+	    	QueryBuilder qb = fullTextSession.getSearchFactory()
+	    	    .buildQueryBuilder().forEntity( Ventures.class ).get();
+	    	
+	    	//IF QUERY is wrapped in quotes create a phrase query instead of keyword query:
+	    	/*Query luceneQuery = mythQB
+	    		    .phrase()
+	    		    .onField("history")
+	    		    .sentence("Thou shalt not kill")
+	    		    .createQuery();*/
+	    	org.apache.lucene.search.Query lq = qb.keyword().onFields("companyName", "blurb", "verticals", "website", "pnpContact", "contactName", "email", "phoneNumber", "totalMoneyRaised", "stage", "b2bb2c", "employees", "location", "city", "competition", "advantage", "background", "founded", "partnerInterests", "caseStudy", "comments", "tags").matching(query).createQuery();
+	    	
+	    	// wrap Lucene query in a org.hibernate.Query
+	    	int count = fullTextSession.createFullTextQuery(lq, Ventures.class).getResultSize();
+
+	    	tx.commit();
+	     
+	     return count;
+	      
+	     } catch (RuntimeException e) {
+	         session.getTransaction().rollback();
+	         log.fatal(e.getMessage(), e.fillInStackTrace());
+	         throw e;
+	     }
+	}
+	
 	public static long getVenturesCount() {
 		 Session session = SessionFactoryUtil.getSessionFactory().getCurrentSession();
 	     try {
 	     session.getTransaction().begin();
+	     
+	     @SuppressWarnings("unchecked")
+		 long count = (long) session.createCriteria(Ventures.class).setProjection(Projections.rowCount()).uniqueResult();
+	     session.getTransaction().commit();
+	     
+	     return count;
+	      
+	     } catch (RuntimeException e) {
+	         session.getTransaction().rollback();
+	         log.fatal(e.getMessage(), e.fillInStackTrace());
+	         throw e;
+	     }
+	}
+	
+	public static long getVenturesCountOffice(String pnpOffices) {
+		 Session session = SessionFactoryUtil.getSessionFactory().getCurrentSession();
+		
+	     try {
+	     session.getTransaction().begin();
+	     if(pnpOffices != null){
+			 session.enableFilter("byPnpOffices").setParameter("pnpOfficesFilter", pnpOffices);
+	     }
 	     
 	     @SuppressWarnings("unchecked")
 		 long count = (long) session.createCriteria(Ventures.class).setProjection(Projections.rowCount()).uniqueResult();

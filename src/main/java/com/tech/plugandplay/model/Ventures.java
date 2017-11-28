@@ -34,14 +34,21 @@ import org.hibernate.annotations.LazyCollection;
 import org.hibernate.annotations.LazyCollectionOption;
 import org.hibernate.search.annotations.Analyze;
 import org.hibernate.search.annotations.Field;
+import org.hibernate.search.annotations.FullTextFilterDef;
+import org.hibernate.search.annotations.FullTextFilterDefs;
 import org.hibernate.search.annotations.Index;
 import org.hibernate.search.annotations.Indexed;
 import org.hibernate.search.annotations.IndexedEmbedded;
 import org.hibernate.search.annotations.Store;
 import org.ocpsoft.pretty.time.PrettyTime;
 
+import com.tech.plugandplay.hibernate.SecurityFilterFactory;
+
 @SuppressWarnings("serial")
 @Entity
+/*@FullTextFilterDefs( {
+    @FullTextFilterDef(name = "security", impl = SecurityFilterFactory.class) 
+})*/
 @FilterDefs({
 	@FilterDef(name = "byCompanyName", parameters=@ParamDef( name = "companyNameFilter", type = "string")),
 	@FilterDef(name = "byVerticals", parameters=@ParamDef( name = "verticalsFilter", type = "string")),
@@ -66,6 +73,7 @@ import org.ocpsoft.pretty.time.PrettyTime;
 	@FilterDef(name = "byComments", parameters=@ParamDef( name = "commentsFilter", type = "string")),
 	@FilterDef(name = "byDateOfInvestment", parameters=@ParamDef( name = "dateOfInvestmentFilter", type = "string")),
 	@FilterDef(name = "byPnpOffice", parameters=@ParamDef( name = "pnpOfficeFilter", type = "string")),
+	@FilterDef(name = "byPnpOffices", parameters=@ParamDef( name = "pnpOfficesFilter", type = "string")),
 	@FilterDef(name = "byOneLiner", parameters=@ParamDef( name = "oneLinerFilter", type = "string")),
 	@FilterDef(name = "byInvestors", parameters=@ParamDef( name = "investorsFilter", type = "string")),
 	@FilterDef(name = "byHowDidYouHear", parameters=@ParamDef( name = "howDidYouHearFilter", type = "string")),
@@ -96,6 +104,7 @@ import org.ocpsoft.pretty.time.PrettyTime;
 	@Filter(name="byComments", condition="COMMENTS like :commentsFilter"),
 	@Filter(name="byDateOfInvestment", condition="DATE_OF_INVESTMENT like :dateOfInvestmentFilter"),
 	@Filter(name="byPnpOffice", condition="PNP_OFFICE like :pnpOfficeFilter"),
+	@Filter(name="byPnpOffices", condition=":pnpOfficesFilter like CONCAT('%', PNP_OFFICE, '%')"),
 	@Filter(name="byOneLiner", condition="ONE_LINER like :pnpOfficeFilter"),
 	@Filter(name="byInvestors", condition="INVESTORS like :investorsFilter"),
 	@Filter(name="byHowDidYouHear", condition="HOW_DID_YOU_HEAR like :howDidYouHearFilter"),
