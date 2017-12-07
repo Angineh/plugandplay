@@ -2104,7 +2104,7 @@ public class RestService {
 				+ "Activate your Account"
 				+ "</a>"
 				+ emailpass
-				+ "<p style=\"padding-top: 15px;font-size:10px;font-style: italic;color:black;\">Copyright © 2017 Plug and Play, LLC, All rights reserved.</p>"
+				+ "<p style=\"padding-top: 15px;font-size:10px;font-style: italic;color:black;\">Copyright ï¿½ 2017 Plug and Play, LLC, All rights reserved.</p>"
 				, "text/html");
 
 			Transport.send(message);
@@ -2115,6 +2115,74 @@ public class RestService {
 		}
 		
 		return Response.ok(user).header("Access-Control-Allow-Origin", "*").build();
+	}
+	
+	@POST
+    @Path("/forgotpass")
+    @Consumes(MediaType.APPLICATION_JSON)
+    @Produces(MediaType.APPLICATION_JSON)
+    @Formatted
+    public Response forgotpass(String json) {
+		
+		JSONObject body = new JSONObject(json);		
+		String email = body.getString("email");
+		String api_key = body.getString("api_key");
+		if(!api_key.equals("f7d624c2-f89e-40b9-9e4b-ff2db471a998")){
+			return Response.status(Response.Status.FORBIDDEN).entity("Not Authorized").build();
+		}
+		
+		List<Users> check = HibernateUtil.getUserByEmail(email);
+		if(check.isEmpty()){
+			return Response.status(Response.Status.NO_CONTENT).entity("Could not find your email address. Please contact a Plug and Play representative.").header("Access-Control-Allow-Origin", "*").build();
+		} else {
+			Users user = check.get(0);
+			final String username = "playbook.pnp@gmail.com";
+			final String pass = "Tmp4now!";
+
+			Properties props = new Properties();
+			props.put("mail.smtp.auth", "true");
+			props.put("mail.smtp.starttls.enable", "true");
+			props.put("mail.smtp.host", "smtp.gmail.com");
+			//props.put("mail.smtp.host", "west.exch024.serverdata.net");
+			props.put("mail.smtp.port", "587");
+
+			Session session = Session.getInstance(props,
+			  new javax.mail.Authenticator() {
+				protected PasswordAuthentication getPasswordAuthentication() {
+					return new PasswordAuthentication(username, pass);
+				}
+			  });
+
+			try {
+
+				Message message = new MimeMessage(session);
+				try {
+					//message.setFrom(new InternetAddress("no-reply@pnptc.com", "Playbook"));
+					message.setFrom(new InternetAddress("playbook.pnp@gmail.com", "Playbook"));
+				} catch (UnsupportedEncodingException e) {
+					// TODO Auto-generated catch block
+					return Response.status(Response.Status.NO_CONTENT).entity("Could not register your email. Please contact a Plug and Play representative.").header("Access-Control-Allow-Origin", "*").build();
+				}
+				String hostname = "playbook.pnptc.com";
+				/*String hostname = "54.145.172.103";*/
+				message.setRecipients(Message.RecipientType.TO,
+					InternetAddress.parse(user.getEmail()));
+				message.setSubject("Reset your Playbook password");
+				message.setContent("<h3 style=\"padding-bottom: 10px;margin-bottom: 8px;margin-top: 5px;\">Hi "+user.getName()+"!</h3>"
+					+ "Click this button to reset your password: "
+					+ "<a style=\"text-decoration:none;color: #fff;background:#3dd28d;border-radius: 4px;border: 0 none;font-size: 13px;padding: 10px;font-weight: bold;line-height: 1.0;font-family:sans-serif;box-shadow: 1px 1px 2px #888888;\" href=\"http://"+hostname+"/#/resetpass/"+ user.getApi_key()+"\">"			
+					+ "Reset Password"
+					+ "</a>"
+					+ "<p style=\"padding-top: 15px;font-size:10px;font-style: italic;color:black;\">Copyright ï¿½ 2017 Plug and Play, LLC, All rights reserved.</p>"
+					, "text/html");
+
+				Transport.send(message);
+				return Response.ok(user).header("Access-Control-Allow-Origin", "*").build();
+			} catch (MessagingException e) {
+				log.info("Could not reset the password with exception:"+ e.toString());
+				return Response.status(Response.Status.NO_CONTENT).entity("Could not reset your password. Please contact a Plug and Play representative.").header("Access-Control-Allow-Origin", "*").build();
+			}
+		}
 	}
 	
 	@POST

@@ -173,4 +173,10 @@
         </plugins>
     </pluginManagement>
   </build>
+  <repositories>
+    <repository>
+      <id>jai-toolkit</id>
+      <url>http://maven.geotoolkit.org</url>
+    </repository>
+ </repositories>
 </project>
